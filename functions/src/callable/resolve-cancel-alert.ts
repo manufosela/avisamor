@@ -1,6 +1,6 @@
 import { onCall, HttpsError } from "firebase-functions/v2/https";
 import { getFirestore, FieldValue } from "firebase-admin/firestore";
-import { AlertStatus, isValidTransition } from "../models/index.js";
+import { AlertStatus, MemberRole, isValidTransition } from "../models/index.js";
 
 export const resolveAlert = onCall(
   { region: "europe-west1" },
@@ -93,9 +93,12 @@ export const cancelAlert = onCall(
         );
       }
 
-      // Only the alerter can cancel
-      if (alertData.triggeredBy !== uid) {
-        throw new HttpsError("permission-denied", "Only the alerter can cancel the alert");
+      // Only an alerter of the group can cancel (handles both Flic and direct alerts)
+      const memberDoc = await transaction.get(
+        db.collection("groupMembers").doc(`${alertData.groupId}_${uid}`)
+      );
+      if (!memberDoc.exists || memberDoc.data()?.role !== MemberRole.ALERTER) {
+        throw new HttpsError("permission-denied", "Only an alerter can cancel the alert");
       }
 
       transaction.update(alertRef, {

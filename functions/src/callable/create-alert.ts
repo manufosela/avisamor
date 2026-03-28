@@ -12,7 +12,7 @@ export const createAlert = onCall(
       throw new HttpsError("unauthenticated", "Authentication required");
     }
 
-    const { groupId } = request.data as { groupId?: string };
+    const { groupId, source } = request.data as { groupId?: string; source?: string };
 
     if (!groupId || typeof groupId !== "string") {
       throw new HttpsError("invalid-argument", "groupId is required");
@@ -55,7 +55,7 @@ export const createAlert = onCall(
         alertId: alertRef.id,
         groupId,
         triggeredBy: uid,
-        triggerSource: TriggerSource.PWA,
+        triggerSource: source === "android" ? TriggerSource.ANDROID : TriggerSource.PWA,
         status: AlertStatus.ACTIVE,
         createdAt: FieldValue.serverTimestamp(),
         expiresAt: Timestamp.fromMillis(Date.now() + ALERT_EXPIRY_MS),
