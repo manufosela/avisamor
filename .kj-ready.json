@@ -1,0 +1,32 @@
+{
+  "version": 1,
+  "karajanVersion": "1.38.1",
+  "createdAt": "2026-03-27T22:28:26.482Z",
+  "projectDir": "/home/manu/AndroidStudioProjects/avisamor",
+  "checks": {
+    "gitRepo": {
+      "ok": true,
+      "detail": "Inside a git repository"
+    },
+    "gitRemote": {
+      "ok": true,
+      "detail": "git@github.com-manufosela:manufosela/avisamor.git"
+    },
+    "config": {
+      "ok": true,
+      "detail": "/home/manu/ws_npm-packages/karajan-code/.karajan/kj.config.yml"
+    },
+    "coreBinaries": {
+      "ok": true,
+      "detail": "node, npm, git available"
+    },
+    "agents": {
+      "ok": true,
+      "detail": "coder: claude"
+    },
+    "sonarqube": {
+      "ok": true,
+      "detail": "Reachable at http://localhost:9000"
+    }
+  }
+}
