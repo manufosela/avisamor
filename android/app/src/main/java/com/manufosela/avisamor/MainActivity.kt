@@ -32,8 +32,9 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun handleLockScreenFlags(intent: Intent?) {
+        // Only trust lock-screen wakeup from our own PendingIntent (FCM notification),
+        // never from external deep links which any app could send
         val isAlertIntent = intent?.getBooleanExtra("is_alert", false) == true
-                || intent?.data?.scheme == "avisamor"
         if (isAlertIntent) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {
                 setShowWhenLocked(true)

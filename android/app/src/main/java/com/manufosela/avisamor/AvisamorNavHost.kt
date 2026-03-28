@@ -31,7 +31,7 @@ fun AvisamorNavHost() {
             SetupScreen(
                 onSetupComplete = { role ->
                     val dest = if (role == "alertador") "alerter" else "receiver?alertId="
-                    navController.navigate(dest.trimEnd('=')) {
+                    navController.navigate(dest) {
                         popUpTo("setup") { inclusive = true }
                     }
                 }
