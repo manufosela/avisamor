@@ -2,7 +2,58 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    match /{document=**} {
+
+    // Helper: check if user is authenticated (Anonymous Auth)
+    function isAuth() {
+      return request.auth != null;
+    }
+
+    // Helper: check if user is a member of a group
+    function isMemberOfGroup(groupId) {
+      return isAuth() &&
+        exists(/databases/$(database)/documents/groupMembers/$(groupId + '_' + request.auth.uid));
+    }
+
+    // Helper: check if the document belongs to the requesting user
+    function isOwner(uid) {
+      return isAuth() && request.auth.uid == uid;
+    }
+
+    // Groups: read by members, create by authenticated users
+    match /groups/{groupId} {
+      allow read: if isMemberOfGroup(groupId);
+      allow create: if isAuth();
+      allow update: if isMemberOfGroup(groupId);
+      allow delete: if false;
+    }
+
+    // GroupMembers: read by group members, create/update own membership
+    match /groupMembers/{memberId} {
+      allow read: if isAuth() &&
+        isMemberOfGroup(resource.data.groupId);
+      allow create: if isAuth() &&
+        request.resource.data.uid == request.auth.uid;
+      allow update: if isAuth() &&
+        resource.data.uid == request.auth.uid;
+      allow delete: if false;
+    }
+
+    // Alerts: read by group members, write only via Cloud Functions (server-side)
+    match /alerts/{alertId} {
+      allow read: if isAuth() &&
+        isMemberOfGroup(resource.data.groupId);
+      allow create, update, delete: if false;
+    }
+
+    // AlertHistory: read-only by group members
+    match /alertHistory/{historyId} {
+      allow read: if isAuth() &&
+        isMemberOfGroup(resource.data.groupId);
+      allow create, update, delete: if false;
+    }
+
+    // ApiKeys: server-side only, no client access
+    match /apiKeys/{keyId} {
       allow read, write: if false;
     }
   }
