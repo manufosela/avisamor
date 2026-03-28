@@ -27,3 +27,6 @@ android/.gradle/
 # OS
 .DS_Store
 Thumbs.db
+pwa/node_modules/
+pwa/.astro/
+pwa/dist/
