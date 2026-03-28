@@ -27,14 +27,14 @@ service cloud.firestore {
       allow delete: if false;
     }
 
-    // GroupMembers: read by group members, create/update own membership
+    // GroupMembers: read by group members, create/update only via server-side (Cloud Functions)
+    // R-1 fix: clients cannot self-assign to groups; joinGroup callable handles membership creation
+    // R-2 fix: clients cannot mutate role/groupId; only fcmToken update allowed via registerFcmToken callable
     match /groupMembers/{memberId} {
       allow read: if isAuth() &&
         isMemberOfGroup(resource.data.groupId);
-      allow create: if isAuth() &&
-        request.resource.data.uid == request.auth.uid;
-      allow update: if isAuth() &&
-        resource.data.uid == request.auth.uid;
+      allow create: if false; // Only server-side via Cloud Functions (joinGroup callable)
+      allow update: if false; // Only server-side via Cloud Functions (registerFcmToken callable)
       allow delete: if false;
     }
 
