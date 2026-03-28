@@ -1,0 +1,319 @@
+# Avisamor - Historias de Usuario para HU Board de Karajan
+# Sistema de alertas para personas dependientes en el hogar
+
+stories:
+  # === INFRAESTRUCTURA ===
+  - id: HU-001
+    title: "Inicializar estructura monorepo"
+    description: |
+      Crear estructura monorepo con directorios /functions, /pwa, /android.
+      Configurar firebase.json con hosting (pwa) y functions.
+      Crear .firebaserc, .gitignore, package.json raíz.
+    priority: critical
+    estimate: 1
+    tags: [infra, setup]
+
+  - id: HU-002
+    title: "Setup Cloud Functions TypeScript"
+    description: |
+      Inicializar /functions con Firebase Functions v2, TypeScript.
+      Estructura: src/triggers/, src/callable/, src/api/, src/scheduled/, src/models/, src/utils/.
+      Configurar tsconfig.json, eslint, vitest.
+    priority: critical
+    estimate: 1
+    tags: [infra, functions]
+
+  # === MODELO DE DATOS ===
+  - id: HU-003
+    title: "Definir modelo de datos e interfaces TypeScript"
+    description: |
+      Interfaces: Group, GroupMember, Alert, AlertHistory, ApiKey.
+      Enums: AlertStatus (active, accepted, resolved, cancelled, expired), MemberRole (alerter, responder).
+      Máquina de estados de alertas documentada.
+    priority: critical
+    estimate: 2
+    tags: [backend, model]
+
+  - id: HU-004
+    title: "Firestore security rules"
+    description: |
+      groups: lectura/escritura por miembros del grupo.
+      groupMembers: lectura por grupo, escritura propia.
+      alerts: lectura por grupo, creación solo server-side.
+      alertHistory: solo lectura por grupo.
+      apiKeys: solo server-side.
+    priority: critical
+    estimate: 2
+    tags: [backend, security]
+
+  - id: HU-005
+    title: "Firestore composite indexes"
+    description: |
+      alerts: groupId+status+createdAt.
+      alertHistory: groupId+createdAt desc.
+      groupMembers: groupId+role.
+    priority: high
+    estimate: 1
+    tags: [backend, infra]
+
+  # === BACKEND - GESTIÓN DE GRUPOS ===
+  - id: HU-006
+    title: "Cloud Function: createGroup"
+    description: |
+      Callable que genera código 6 dígitos único, crea grupo en Firestore,
+      añade al creador como primer miembro. Valida auth y nombre requerido.
+    priority: critical
+    estimate: 2
+    tags: [backend, functions]
+
+  - id: HU-007
+    title: "Cloud Function: joinGroup"
+    description: |
+      Callable que busca grupo por código 6 dígitos, añade miembro con rol
+      (alerter/responder) y displayName. Valida código, existencia, no duplicados.
+    priority: critical
+    estimate: 2
+    tags: [backend, functions]
+
+  - id: HU-008
+    title: "Cloud Function: registerFcmToken"
+    description: |
+      Callable que almacena/actualiza token FCM del miembro en groupMembers.
+      Valida pertenencia al grupo.
+    priority: high
+    estimate: 1
+    tags: [backend, functions]
+
+  # === BACKEND - ALERTAS ===
+  - id: HU-009
+    title: "Cloud Function: alert/trigger (Flic 2 endpoint)"
+    description: |
+      POST /api/alert/trigger - endpoint HTTP para webhook Flic 2.
+      Valida API key, busca grupo, aplica debounce 30s, crea alerta active.
+    priority: critical
+    estimate: 3
+    tags: [backend, functions, flic]
+
+  - id: HU-010
+    title: "Cloud Function: createAlert (callable PWA)"
+    description: |
+      Callable para crear alertas desde PWA. Misma lógica de debounce 30s.
+      Valida que usuario es alerter del grupo.
+    priority: critical
+    estimate: 2
+    tags: [backend, functions]
+
+  - id: HU-011
+    title: "Cloud Function: acceptAlert"
+    description: |
+      Callable que registra aceptación. Primera aceptación cambia status a 'accepted'.
+      Múltiples pueden aceptar. Registra responderId, displayName, acceptedAt.
+    priority: critical
+    estimate: 2
+    tags: [backend, functions]
+
+  - id: HU-012
+    title: "Cloud Function: resolveAlert y cancelAlert"
+    description: |
+      resolveAlert: accepted→resolved (alerter o responder que aceptó).
+      cancelAlert: active→cancelled (solo alerter).
+      Registran timestamp y actor.
+    priority: critical
+    estimate: 2
+    tags: [backend, functions]
+
+  # === BACKEND - FCM Y TRIGGERS ===
+  - id: HU-013
+    title: "Trigger FCM: onAlertCreated"
+    description: |
+      onDocumentCreated para alerts: envía FCM HIGH priority a todos los
+      responders del grupo. Payload: alertId, groupId, alerterName.
+    priority: critical
+    estimate: 3
+    tags: [backend, functions, fcm]
+
+  - id: HU-014
+    title: "Trigger FCM: onAlertUpdated"
+    description: |
+      onDocumentUpdated para alerts: al cambiar a 'accepted' notifica a todos
+      quién aceptó. Al cambiar a resolved/cancelled/expired envía dismissal.
+    priority: critical
+    estimate: 2
+    tags: [backend, functions, fcm]
+
+  - id: HU-015
+    title: "Scheduled function: expireAlerts"
+    description: |
+      Cada 30s busca alertas active con createdAt > 1 min.
+      Transiciona a 'expired'. Copia a alertHistory.
+    priority: high
+    estimate: 2
+    tags: [backend, functions]
+
+  - id: HU-016
+    title: "Cloud Function: getHistory"
+    description: |
+      Callable que consulta alertHistory por groupId, paginado descendente (limit 50).
+      Incluye datos de alertador, responders, tiempos de respuesta.
+    priority: medium
+    estimate: 2
+    tags: [backend, functions]
+
+  # === BACKEND - TESTS ===
+  - id: HU-017
+    title: "Tests unitarios Cloud Functions"
+    description: |
+      Tests con vitest: transiciones de estado, debounce, validación API key,
+      createGroup/joinGroup, acceptAlert, expireAlerts. Mock Firestore y FCM.
+    priority: high
+    estimate: 3
+    tags: [backend, testing]
+
+  # === PWA iPad ===
+  - id: HU-018
+    title: "Setup PWA: Astro + Lit + Firebase"
+    description: |
+      Inicializar /pwa con Astro, integración Lit. Manifest.json (standalone, fullscreen).
+      Service worker, Firebase JS SDK client.
+    priority: high
+    estimate: 2
+    tags: [pwa, setup]
+
+  - id: HU-019
+    title: "PWA: Anonymous Auth y setup de grupo"
+    description: |
+      Auto-login Anonymous Auth al cargar. Componente Lit de setup: input nombre,
+      selección rol alerter, input código grupo o crear grupo nuevo.
+    priority: high
+    estimate: 2
+    tags: [pwa, auth]
+
+  - id: HU-020
+    title: "PWA: Botón rojo fullscreen"
+    description: |
+      Botón rojo gigante 100vh, touch-optimized para iPad. Texto grande
+      'PULSA PARA ALERTAR'. Llama callable createAlert. Feedback visual de estado.
+    priority: critical
+    estimate: 2
+    tags: [pwa, ui]
+
+  - id: HU-021
+    title: "PWA: Real-time listener estado alerta"
+    description: |
+      Firestore onSnapshot escucha alerta activa del grupo.
+      Muestra quién ha aceptado en tiempo real con nombre y hora.
+    priority: high
+    estimate: 2
+    tags: [pwa, realtime]
+
+  - id: HU-022
+    title: "PWA: Service Worker y offline indicator"
+    description: |
+      Banner visual sin conexión. Cacheo assets estáticos. Icono estado conexión
+      siempre visible. La persona dependiente sabe si puede avisar o no.
+    priority: high
+    estimate: 2
+    tags: [pwa, offline]
+
+  # === APP ANDROID ===
+  - id: HU-023
+    title: "Setup Android: Kotlin + Compose + Firebase"
+    description: |
+      Inicializar /android con Kotlin, Jetpack Compose, Material 3.
+      Dependencias: Firebase Auth, Firestore, FCM, Hilt, Navigation, DataStore.
+      Estructura MVVM: ui/, data/, domain/, service/.
+    priority: critical
+    estimate: 2
+    tags: [android, setup]
+
+  - id: HU-024
+    title: "Android: Setup screen onboarding"
+    description: |
+      Flujo: nombre → rol (alertador/receptor) → código grupo 6 dígitos / crear grupo.
+      Anonymous Auth. Guardar en DataStore.
+    priority: critical
+    estimate: 3
+    tags: [android, ui, auth]
+
+  - id: HU-025
+    title: "Android: Pantalla alertador"
+    description: |
+      Botón rojo grande centrado. Firestore real-time listener.
+      Lista de quién ha aceptado con timestamps. Botón resolver/cancelar.
+    priority: high
+    estimate: 3
+    tags: [android, ui]
+
+  - id: HU-026
+    title: "Android: Pantalla receptor alerta fullscreen"
+    description: |
+      Alerta fullscreen sobre cualquier app (fullscreen intent).
+      Info del alertador, botón 'VOY YO' prominente. Animación de urgencia.
+    priority: critical
+    estimate: 3
+    tags: [android, ui]
+
+  - id: HU-027
+    title: "Android: Notificación alarma (sonido + vibración + flash)"
+    description: |
+      NotificationChannel ALARM max priority. Sonido alarma personalizado.
+      Patrón vibración urgente. Flash LED via Camera2 API. Configuración on/off.
+    priority: critical
+    estimate: 3
+    tags: [android, notification]
+
+  - id: HU-028
+    title: "Android: FCM foreground service"
+    description: |
+      Servicio persistente FCM. Canal ALARM alta prioridad.
+      Parseo payload FCM para alerta fullscreen en background/killed.
+      WakeLock para despertar dispositivo.
+    priority: critical
+    estimate: 3
+    tags: [android, fcm, service]
+
+  - id: HU-029
+    title: "Android: Settings screen"
+    description: |
+      Toggles sonido, vibración, flash. Selector tono alarma.
+      Info grupo (código, miembros). Opción salir grupo. Persistencia DataStore.
+    priority: medium
+    estimate: 2
+    tags: [android, ui]
+
+  - id: HU-030
+    title: "Android: Historial y estadísticas"
+    description: |
+      Lista alertas pasadas: fecha, alertador, responders, tiempo respuesta.
+      Stats: total alertas, tiempo medio respuesta, responder frecuente.
+    priority: medium
+    estimate: 2
+    tags: [android, ui]
+
+  - id: HU-031
+    title: "Android: Navegación y deep links FCM"
+    description: |
+      Navigation Compose: setup → main (alerter/responder) → settings → history.
+      Deep links desde notificación FCM a pantalla alerta activa.
+    priority: high
+    estimate: 2
+    tags: [android, navigation]
+
+  # === DEPLOY E INTEGRACIÓN ===
+  - id: HU-032
+    title: "Scripts de deploy y documentación"
+    description: |
+      Scripts: firebase deploy --only functions, firebase deploy --only hosting.
+      README con instrucciones de desarrollo y despliegue.
+    priority: medium
+    estimate: 1
+    tags: [infra, docs]
+
+  - id: HU-033
+    title: "Tests de integración E2E"
+    description: |
+      Flujo completo: crear grupo → unirse → crear alerta → aceptar → resolver.
+      Test debounce. Test expiración. Firebase emulators.
+    priority: high
+    estimate: 3
+    tags: [testing, e2e]
