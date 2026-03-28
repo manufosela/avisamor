@@ -22,11 +22,11 @@ const fakeTimestamp = { seconds: 0, nanoseconds: 0 } as unknown as Timestamp;
 
 describe("AlertStatus enum", () => {
   it("should have all required values", () => {
-    expect(AlertStatus.ACTIVE).toBe("ACTIVE");
-    expect(AlertStatus.ACCEPTED).toBe("ACCEPTED");
-    expect(AlertStatus.RESOLVED).toBe("RESOLVED");
-    expect(AlertStatus.CANCELLED).toBe("CANCELLED");
-    expect(AlertStatus.EXPIRED).toBe("EXPIRED");
+    expect(AlertStatus.ACTIVE).toBe("active");
+    expect(AlertStatus.ACCEPTED).toBe("accepted");
+    expect(AlertStatus.RESOLVED).toBe("resolved");
+    expect(AlertStatus.CANCELLED).toBe("cancelled");
+    expect(AlertStatus.EXPIRED).toBe("expired");
   });
 
   it("should have exactly 5 values", () => {
@@ -36,9 +36,9 @@ describe("AlertStatus enum", () => {
 
 describe("TriggerSource enum", () => {
   it("should have all required values", () => {
-    expect(TriggerSource.FLIC).toBe("FLIC");
-    expect(TriggerSource.PWA).toBe("PWA");
-    expect(TriggerSource.ANDROID).toBe("ANDROID");
+    expect(TriggerSource.FLIC).toBe("flic");
+    expect(TriggerSource.PWA).toBe("pwa");
+    expect(TriggerSource.ANDROID).toBe("android");
   });
 
   it("should have exactly 3 values", () => {
@@ -48,8 +48,8 @@ describe("TriggerSource enum", () => {
 
 describe("MemberRole enum", () => {
   it("should have all required values", () => {
-    expect(MemberRole.ALERTER).toBe("ALERTER");
-    expect(MemberRole.RESPONDER).toBe("RESPONDER");
+    expect(MemberRole.ALERTER).toBe("alerter");
+    expect(MemberRole.RESPONDER).toBe("responder");
   });
 
   it("should have exactly 2 values", () => {
