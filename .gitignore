@@ -18,6 +18,7 @@ dist/
 # Android
 android/app/build/
 android/.gradle/
+android/app/google-services.json
 
 # IDE
 .idea/
