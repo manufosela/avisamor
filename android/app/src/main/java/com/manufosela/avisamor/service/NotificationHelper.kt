@@ -42,22 +42,36 @@ object NotificationHelper {
         manager.createNotificationChannel(channel)
     }
 
-    fun showAlertNotification(context: Context, alerterName: String, alertId: String) {
-        val alarmSound = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM)
-            ?: RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
-
-        val notification = NotificationCompat.Builder(context, CHANNEL_ID)
+    fun showAlertNotification(
+        context: Context,
+        alerterName: String,
+        alertId: String,
+        soundEnabled: Boolean = true,
+        vibrationEnabled: Boolean = true
+    ) {
+        val builder = NotificationCompat.Builder(context, CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_launcher_foreground)
             .setContentTitle("ALERTA - $alerterName necesita ayuda")
             .setContentText("Pulsa para responder")
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setCategory(NotificationCompat.CATEGORY_ALARM)
-            .setSound(alarmSound)
-            .setVibrate(longArrayOf(0, 500, 200, 500, 200, 500))
             .setAutoCancel(true)
             .setFullScreenIntent(fullScreenPendingIntent(context, alertId), true)
             .setContentIntent(fullScreenPendingIntent(context, alertId))
-            .build()
+
+        if (soundEnabled) {
+            val alarmSound = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM)
+                ?: RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
+            builder.setSound(alarmSound)
+        } else {
+            builder.setSilent(true)
+        }
+
+        if (vibrationEnabled) {
+            builder.setVibrate(longArrayOf(0, 500, 200, 500, 200, 500))
+        }
+
+        val notification = builder.build()
 
         val manager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         manager.notify(alertId.hashCode(), notification)

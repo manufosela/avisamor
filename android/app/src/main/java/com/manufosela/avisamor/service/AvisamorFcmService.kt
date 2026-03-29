@@ -49,12 +49,15 @@ class AvisamorFcmService : FirebaseMessagingService() {
         val alerterName = data["alerterName"] ?: "Alguien"
 
         acquireWakeLock()
-        NotificationHelper.showAlertNotification(this, alerterName, alertId)
 
         serviceScope.launch {
             val soundEnabled = preferencesRepository.soundEnabled.first()
             val vibrationEnabled = preferencesRepository.vibrationEnabled.first()
             val flashEnabled = preferencesRepository.flashEnabled.first()
+
+            NotificationHelper.showAlertNotification(
+                this@AvisamorFcmService, alerterName, alertId, soundEnabled, vibrationEnabled
+            )
 
             if (flashEnabled) {
                 toggleFlash(true)
