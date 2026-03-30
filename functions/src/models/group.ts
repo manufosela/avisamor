@@ -24,4 +24,6 @@ export interface GroupMember {
   displayName: string;
   fcmToken: string | null;
   joinedAt: Timestamp;
+  currentZone?: string | null;
+  currentZoneUpdatedAt?: Timestamp | null;
 }

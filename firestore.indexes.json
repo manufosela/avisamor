@@ -33,6 +33,14 @@
         { "fieldPath": "role", "order": "ASCENDING" }
       ]
     }
+    {
+      "collectionGroup": "beacons",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "groupId", "order": "ASCENDING" },
+        { "fieldPath": "active", "order": "ASCENDING" }
+      ]
+    }
   ],
   "fieldOverrides": []
 }
