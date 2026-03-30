@@ -32,7 +32,7 @@
         { "fieldPath": "groupId", "order": "ASCENDING" },
         { "fieldPath": "role", "order": "ASCENDING" }
       ]
-    }
+    },
     {
       "collectionGroup": "beacons",
       "queryScope": "COLLECTION",
