@@ -82,13 +82,12 @@ class BeaconScanService : Service() {
                 return@launch
             }
 
-            beaconRepository.listBeacons(groupId)
-                .onSuccess { beacons ->
-                    knownBeacons = beacons
-                    Log.d(TAG, "Loaded ${knownBeacons.size} beacons for group $groupId")
-                }.onFailure { e ->
-                    Log.e(TAG, "Failed to load beacons", e)
-                }
+            try {
+                knownBeacons = beaconRepository.listBeacons(groupId)
+                Log.d(TAG, "Loaded ${knownBeacons.size} beacons for group $groupId")
+            } catch (e: Exception) {
+                Log.e(TAG, "Failed to load beacons", e)
+            }
 
             startScanLoop()
         }
@@ -167,9 +166,12 @@ class BeaconScanService : Service() {
             updateNotification("Zona: $currentZone")
 
             serviceScope.launch {
-                preferencesRepository.saveCurrentZone(currentZone!!)
-                beaconRepository.updateMyZone(groupId, currentZone!!, bestBeacon.beaconId)
-                    .onFailure { e -> Log.e(TAG, "Failed to update zone", e) }
+                try {
+                    preferencesRepository.saveCurrentZone(currentZone!!)
+                    beaconRepository.updateMyZone(groupId, currentZone!!, bestBeacon.beaconId)
+                } catch (e: Exception) {
+                    Log.e(TAG, "Failed to update zone", e)
+                }
             }
         }
     }

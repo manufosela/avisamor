@@ -79,14 +79,15 @@ class SetupViewModel @Inject constructor(
     fun createGroup() {
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true, error = null)
-            groupRepository.createGroup(
-                name = _uiState.value.name,
-                role = _uiState.value.role
-            ).onSuccess { result ->
+            try {
+                val result = groupRepository.createGroup(
+                    name = _uiState.value.name,
+                    role = _uiState.value.role
+                )
                 val groupId = result["groupId"] as? String ?: ""
                 val groupCode = result["code"] as? String ?: ""
                 saveAndFinish(groupId, groupCode)
-            }.onFailure { e ->
+            } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(
                     isLoading = false,
                     error = "Error al crear grupo: ${e.message}"
@@ -103,14 +104,15 @@ class SetupViewModel @Inject constructor(
         }
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true, error = null)
-            groupRepository.joinGroup(
-                code = code,
-                displayName = _uiState.value.name,
-                role = _uiState.value.role
-            ).onSuccess { result ->
+            try {
+                val result = groupRepository.joinGroup(
+                    code = code,
+                    displayName = _uiState.value.name,
+                    role = _uiState.value.role
+                )
                 val groupId = result["groupId"] as? String ?: ""
                 saveAndFinish(groupId, code)
-            }.onFailure { e ->
+            } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(
                     isLoading = false,
                     error = "Error al unirse: ${e.message}"

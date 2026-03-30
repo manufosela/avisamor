@@ -55,12 +55,12 @@ class BeaconSetupViewModel @Inject constructor(
     }
 
     private suspend fun loadRegisteredBeacons() {
-        beaconRepository.listBeacons(groupId)
-            .onSuccess { beacons ->
-                _uiState.update { it.copy(registeredBeacons = beacons, isLoading = false) }
-            }.onFailure { e ->
-                _uiState.update { it.copy(error = "Error cargando beacons: ${e.message}", isLoading = false) }
-            }
+        try {
+            val beacons = beaconRepository.listBeacons(groupId)
+            _uiState.update { it.copy(registeredBeacons = beacons, isLoading = false) }
+        } catch (e: Exception) {
+            _uiState.update { it.copy(error = "Error cargando beacons: ${e.message}", isLoading = false) }
+        }
     }
 
     fun startScan() {
@@ -113,13 +113,13 @@ class BeaconSetupViewModel @Inject constructor(
     fun registerBeacon(uuid: String, zoneName: String, floor: Int) {
         _uiState.update { it.copy(isRegistering = true, error = null) }
         viewModelScope.launch {
-            beaconRepository.registerBeacon(groupId, uuid, zoneName, floor)
-                .onSuccess {
-                    loadRegisteredBeacons()
-                    _uiState.update { it.copy(isRegistering = false, scannedBeacons = emptyList()) }
-                }.onFailure { e ->
-                    _uiState.update { it.copy(isRegistering = false, error = "Error: ${e.message}") }
-                }
+            try {
+                beaconRepository.registerBeacon(groupId, uuid, zoneName, floor)
+                loadRegisteredBeacons()
+                _uiState.update { it.copy(isRegistering = false, scannedBeacons = emptyList()) }
+            } catch (e: Exception) {
+                _uiState.update { it.copy(isRegistering = false, error = "Error: ${e.message}") }
+            }
         }
     }
 

@@ -52,22 +52,24 @@ class AlerterViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(buttonState = AlertButtonState.SENDING, error = null)
             val groupId = preferencesRepository.groupId.first()
-            alertRepository.createAlert(groupId, "android")
-                .onSuccess {
-                    _uiState.value = _uiState.value.copy(buttonState = AlertButtonState.SENT)
-                }.onFailure { e ->
-                    _uiState.value = _uiState.value.copy(
-                        buttonState = AlertButtonState.ERROR,
-                        error = "Error al enviar alerta: ${e.message}"
-                    )
-                }
+            try {
+                alertRepository.createAlert(groupId, "android")
+                _uiState.value = _uiState.value.copy(buttonState = AlertButtonState.SENT)
+            } catch (e: Exception) {
+                _uiState.value = _uiState.value.copy(
+                    buttonState = AlertButtonState.ERROR,
+                    error = "Error al enviar alerta: ${e.message}"
+                )
+            }
         }
     }
 
     fun cancelAlert() {
         val alertId = _uiState.value.activeAlert?.alertId ?: return
         viewModelScope.launch {
-            alertRepository.cancelAlert(alertId).onFailure { e ->
+            try {
+                alertRepository.cancelAlert(alertId)
+            } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(error = "Error al cancelar: ${e.message}")
             }
         }
@@ -76,7 +78,9 @@ class AlerterViewModel @Inject constructor(
     fun resolveAlert() {
         val alertId = _uiState.value.activeAlert?.alertId ?: return
         viewModelScope.launch {
-            alertRepository.resolveAlert(alertId).onFailure { e ->
+            try {
+                alertRepository.resolveAlert(alertId)
+            } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(error = "Error al resolver: ${e.message}")
             }
         }
