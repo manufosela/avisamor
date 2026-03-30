@@ -1,0 +1,61 @@
+---
+import Layout from '../layouts/Layout.astro';
+---
+<Layout title="Descargo de Responsabilidades - Avisamor">
+  <div class="legal-page">
+    <a href="/" class="back-link">&larr; Volver a Avisamor</a>
+    <h1>Descargo de Responsabilidades</h1>
+    <p class="updated">Última actualización: 30 de marzo de 2026</p>
+
+    <div class="warning-box">
+      <strong>IMPORTANTE:</strong> Avisamor NO es un servicio de emergencia. NO sustituye al 112, ambulancias, bomberos, policía ni a ningún servicio profesional de atención de emergencias.
+    </div>
+
+    <h2>1. Naturaleza del servicio</h2>
+    <p>Avisamor es una herramienta de <strong>comunicación auxiliar</strong> diseñada para facilitar la coordinación entre cuidadores de personas dependientes. Su función es complementaria, nunca sustitutiva de los servicios de emergencia profesionales.</p>
+
+    <h2>2. Sin garantía de funcionamiento</h2>
+    <ul>
+      <li>El servicio depende de la conectividad a internet del dispositivo.</li>
+      <li>Las notificaciones push (FCM) pueden retrasarse o no llegar por factores ajenos a nuestro control (modo ahorro de batería, red, configuración del dispositivo).</li>
+      <li>La detección de zona por beacons BLE es aproximada y depende del hardware.</li>
+      <li>El servicio puede tener interrupciones por mantenimiento o fallos técnicos.</li>
+    </ul>
+
+    <h2>3. Responsabilidad del usuario</h2>
+    <ul>
+      <li>El usuario es responsable de mantener su dispositivo cargado, conectado a internet y con la aplicación correctamente configurada.</li>
+      <li>El usuario debe tener siempre un <strong>plan alternativo de emergencia</strong> que no dependa de esta aplicación.</li>
+      <li>En caso de emergencia real, <strong>llame siempre al 112</strong>.</li>
+    </ul>
+
+    <h2>4. Limitación de responsabilidad</h2>
+    <p>En la máxima medida permitida por la ley, Avisamor y su desarrollador no serán responsables de daños directos, indirectos, incidentales o consecuentes derivados del uso o imposibilidad de uso de la aplicación.</p>
+
+    <h2>5. Uso bajo su propio riesgo</h2>
+    <p>El uso de Avisamor es voluntario y bajo la exclusiva responsabilidad del usuario. Al usar la aplicación, acepta este descargo de responsabilidades en su totalidad.</p>
+  </div>
+</Layout>
+
+<style>
+  .legal-page {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 24px 16px 64px;
+    line-height: 1.7;
+    color: #1f2937;
+  }
+  .back-link { color: #dc2626; text-decoration: none; font-size: 0.9rem; }
+  h1 { font-size: 1.8rem; margin-top: 16px; }
+  h2 { font-size: 1.2rem; margin-top: 32px; color: #374151; }
+  .updated { color: #6b7280; font-size: 0.9rem; }
+  .warning-box {
+    background: #fef2f2;
+    border: 2px solid #dc2626;
+    border-radius: 8px;
+    padding: 16px;
+    margin: 24px 0;
+    color: #991b1b;
+  }
+  a { color: #dc2626; }
+</style>

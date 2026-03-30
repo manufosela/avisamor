@@ -1,0 +1,76 @@
+---
+import Layout from '../layouts/Layout.astro';
+---
+<Layout title="Política de Privacidad - Avisamor">
+  <div class="legal-page">
+    <a href="/" class="back-link">&larr; Volver a Avisamor</a>
+    <h1>Política de Privacidad</h1>
+    <p class="updated">Última actualización: 30 de marzo de 2026</p>
+
+    <h2>1. Responsable del tratamiento</h2>
+    <p>Avisamor es un proyecto personal desarrollado por Mánu Fosela. Contacto: <a href="mailto:avisamor@avisablue.com">avisamor@avisablue.com</a></p>
+
+    <h2>2. Datos que recopilamos</h2>
+    <ul>
+      <li><strong>Autenticación anónima</strong>: Firebase genera un identificador único (UID) sin recopilar email, nombre real ni contraseña.</li>
+      <li><strong>Nombre de usuario</strong>: el nombre que el usuario introduce voluntariamente al crear o unirse a un grupo.</li>
+      <li><strong>Token FCM</strong>: identificador del dispositivo para enviar notificaciones push. Se almacena asociado al grupo.</li>
+      <li><strong>Zona actual (BLE)</strong>: si el usuario activa el escaneo de beacons, se almacena la zona detectada (ej: "Cocina") asociada a su perfil de grupo.</li>
+      <li><strong>Historial de alertas</strong>: registro de alertas enviadas/recibidas con timestamps y nombre del usuario que acepta.</li>
+    </ul>
+
+    <h2>3. Finalidad del tratamiento</h2>
+    <ul>
+      <li>Enviar alertas de emergencia entre miembros del grupo</li>
+      <li>Mostrar la ubicación por zonas de los cuidadores</li>
+      <li>Mantener un historial de alertas para seguimiento</li>
+    </ul>
+
+    <h2>4. Base legal</h2>
+    <p>El tratamiento se basa en el <strong>consentimiento</strong> del usuario, otorgado al crear o unirse a un grupo y aceptar estos términos.</p>
+
+    <h2>5. Almacenamiento y ubicación</h2>
+    <ul>
+      <li>Los datos se almacenan en <strong>Google Cloud Firestore</strong>, región <strong>europe-west1</strong> (Bélgica, UE).</li>
+      <li>Las notificaciones push se envían a través de <strong>Firebase Cloud Messaging</strong> (servidores de Google).</li>
+      <li>No vendemos ni compartimos datos con terceros.</li>
+    </ul>
+
+    <h2>6. Periodo de conservación</h2>
+    <ul>
+      <li>Datos del grupo: mientras el grupo exista.</li>
+      <li>Historial de alertas: indefinido (para estadísticas del grupo).</li>
+      <li>Al ejercer el derecho de supresión, todos los datos se eliminan.</li>
+    </ul>
+
+    <h2>7. Derechos del usuario (RGPD)</h2>
+    <p>Puede ejercer sus derechos de acceso, rectificación, supresión, portabilidad, limitación y oposición enviando un email a <a href="mailto:avisamor@avisablue.com">avisamor@avisablue.com</a>.</p>
+    <p>También puede <strong>eliminar todos sus datos</strong> desde la aplicación (Ajustes → Salir del grupo) o solicitando el borrado completo por email.</p>
+
+    <h2>8. Menores</h2>
+    <p>Esta aplicación no está destinada a menores de 16 años. No recopilamos conscientemente datos de menores.</p>
+
+    <h2>9. Cambios en esta política</h2>
+    <p>Nos reservamos el derecho a modificar esta política. Los cambios se publicarán en esta misma página con la fecha de actualización.</p>
+  </div>
+</Layout>
+
+<style>
+  .legal-page {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 24px 16px 64px;
+    line-height: 1.7;
+    color: #1f2937;
+  }
+  .back-link {
+    color: #dc2626;
+    text-decoration: none;
+    font-size: 0.9rem;
+  }
+  h1 { font-size: 1.8rem; margin-top: 16px; }
+  h2 { font-size: 1.2rem; margin-top: 32px; color: #374151; }
+  .updated { color: #6b7280; font-size: 0.9rem; }
+  ul { padding-left: 20px; }
+  a { color: #dc2626; }
+</style>
