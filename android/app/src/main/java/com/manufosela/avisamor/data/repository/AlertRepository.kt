@@ -24,8 +24,11 @@ class AlertRepository @Inject constructor(
         return result.data as Map<String, Any>
     }
 
-    suspend fun acceptAlert(alertId: String): Map<String, Any> {
-        val data = hashMapOf("alertId" to alertId)
+    suspend fun acceptAlert(alertId: String, zone: String? = null): Map<String, Any> {
+        val data = hashMapOf<String, Any>("alertId" to alertId)
+        if (zone != null) {
+            data["zone"] = zone
+        }
         val result = functions.getHttpsCallable("acceptAlert").call(data).await()
         @Suppress("UNCHECKED_CAST")
         return result.data as Map<String, Any>

@@ -9,7 +9,7 @@ export const acceptAlert = onCall(
       throw new HttpsError("unauthenticated", "Authentication required");
     }
 
-    const { alertId } = request.data as { alertId?: string };
+    const { alertId, zone } = request.data as { alertId?: string; zone?: string };
 
     if (!alertId || typeof alertId !== "string") {
       throw new HttpsError("invalid-argument", "alertId is required");
@@ -51,12 +51,17 @@ export const acceptAlert = onCall(
       const now = Timestamp.now();
       const isFirst = status === AlertStatus.ACTIVE;
 
+      const acceptEntry: Record<string, unknown> = {
+        uid,
+        displayName: memberData.displayName || displayName,
+        acceptedAt: now,
+      };
+      if (zone && typeof zone === "string") {
+        acceptEntry.zone = zone;
+      }
+
       const updateData: Record<string, unknown> = {
-        acceptedBy: FieldValue.arrayUnion({
-          uid,
-          displayName: memberData.displayName || displayName,
-          acceptedAt: now,
-        }),
+        acceptedBy: FieldValue.arrayUnion(acceptEntry),
       };
 
       if (isFirst) {

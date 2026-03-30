@@ -167,6 +167,7 @@ class BeaconScanService : Service() {
 
             serviceScope.launch {
                 try {
+                    preferencesRepository.saveCurrentZone(currentZone!!)
                     beaconRepository.updateMyZone(groupId, currentZone!!, bestBeacon.beaconId)
                 } catch (e: Exception) {
                     Log.e(TAG, "Failed to update zone", e)

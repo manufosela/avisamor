@@ -37,7 +37,7 @@ export const onAlertUpdated = onDocumentUpdated(
 
     if (afterStatus === AlertStatus.ACCEPTED) {
       const firstAcceptedBy = afterData.firstAcceptedBy as string;
-      const acceptedBy = afterData.acceptedBy as Array<{ uid: string; displayName: string }>;
+      const acceptedBy = afterData.acceptedBy as Array<{ uid: string; displayName: string; zone?: string }>;
       const acceptor = acceptedBy?.find((a) => a.uid === firstAcceptedBy);
 
       data = {
@@ -45,6 +45,7 @@ export const onAlertUpdated = onDocumentUpdated(
         type: "alert_accepted",
         acceptedByName: acceptor?.displayName ?? "Unknown",
         acceptedByUid: firstAcceptedBy,
+        acceptedByZone: acceptor?.zone ?? "",
       };
     } else if (
       afterStatus === AlertStatus.RESOLVED ||

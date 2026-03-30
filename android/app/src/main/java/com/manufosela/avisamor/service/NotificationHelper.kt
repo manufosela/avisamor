@@ -77,11 +77,11 @@ object NotificationHelper {
         manager.notify(alertId.hashCode(), notification)
     }
 
-    fun showAcceptedNotification(context: Context, acceptorName: String, alertId: String) {
+    fun showAcceptedNotification(context: Context, message: String, alertId: String) {
         val notification = NotificationCompat.Builder(context, CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_launcher_foreground)
             .setContentTitle("Alerta aceptada")
-            .setContentText("$acceptorName va en camino")
+            .setContentText(message)
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setAutoCancel(true)
             .build()

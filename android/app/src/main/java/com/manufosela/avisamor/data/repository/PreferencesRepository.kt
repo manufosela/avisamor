@@ -23,6 +23,7 @@ class PreferencesRepository @Inject constructor(
         private val KEY_SOUND_ENABLED = booleanPreferencesKey("sound_enabled")
         private val KEY_VIBRATION_ENABLED = booleanPreferencesKey("vibration_enabled")
         private val KEY_FLASH_ENABLED = booleanPreferencesKey("flash_enabled")
+        private val KEY_CURRENT_ZONE = stringPreferencesKey("current_zone")
     }
 
     val userName: Flow<String> = dataStore.data.map { it[KEY_USER_NAME] ?: "" }
@@ -59,6 +60,15 @@ class PreferencesRepository @Inject constructor(
 
     suspend fun saveFlashEnabled(enabled: Boolean) {
         dataStore.edit { it[KEY_FLASH_ENABLED] = enabled }
+    }
+
+    suspend fun saveCurrentZone(zone: String) {
+        dataStore.edit { it[KEY_CURRENT_ZONE] = zone }
+    }
+
+    suspend fun getCurrentZone(): String? {
+        val zone = dataStore.data.first()[KEY_CURRENT_ZONE]
+        return if (zone.isNullOrBlank()) null else zone
     }
 
     suspend fun getGroupIdSync(): String {
