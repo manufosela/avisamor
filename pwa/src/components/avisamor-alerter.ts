@@ -3,6 +3,7 @@ import { customElement, property, state } from 'lit/decorators.js';
 import { app } from '../lib/firebase.js';
 import { getFunctions, httpsCallable } from 'firebase/functions';
 import './avisamor-alert-status.js';
+import './avisamor-zone-map.js';
 
 type AlerterState = 'idle' | 'sending' | 'sent' | 'error';
 
@@ -186,6 +187,7 @@ export class AvisamorAlerter extends LitElement {
           ? html`<div class="error-message" role="alert">${this._errorMsg}</div>`
           : ''}
         <avisamor-alert-status .groupId=${this.groupId}></avisamor-alert-status>
+        <avisamor-zone-map .groupId=${this.groupId}></avisamor-zone-map>
       </div>
     `;
   }

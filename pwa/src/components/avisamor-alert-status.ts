@@ -9,7 +9,7 @@ interface AlertData {
   status: string;
   createdAt: { seconds: number } | null;
   firstAcceptedBy: string | null;
-  acceptedBy: Array<{ uid: string; displayName: string; acceptedAt: unknown }>;
+  acceptedBy: Array<{ uid: string; displayName: string; acceptedAt: unknown; zone?: string }>;
 }
 
 @customElement('avisamor-alert-status')
@@ -185,13 +185,13 @@ export class AvisamorAlertStatus extends LitElement {
     }
 
     if (status === 'accepted') {
-      const responderName = acceptedBy?.length > 0
-        ? acceptedBy[0].displayName
-        : 'Alguien';
+      const responder = acceptedBy?.length > 0 ? acceptedBy[0] : null;
+      const responderName = responder?.displayName ?? 'Alguien';
+      const zoneText = responder?.zone ? ` desde ${responder.zone}` : '';
 
       return html`
         <div class="status-container status-accepted" role="alert" aria-live="polite">
-          <p class="status-text">${responderName} va a acudir</p>
+          <p class="status-text">${responderName} va a acudir${zoneText}</p>
         </div>
       `;
     }
