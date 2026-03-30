@@ -2,6 +2,7 @@ import { onCall, HttpsError } from "firebase-functions/v2/https";
 import { getFirestore, FieldValue } from "firebase-admin/firestore";
 import type { Beacon } from "../models/index.js";
 import { validateGroupId, validateBeaconId, validateZoneName } from "../utils/validation.js";
+import { validatePlanLimit, checkGroupNotBlocked } from "../helpers/plan-limits.js";
 
 export const registerBeacon = onCall(
   { region: "europe-west1" },
@@ -34,6 +35,9 @@ export const registerBeacon = onCall(
     if (groupDoc.data()?.createdBy !== request.auth.uid) {
       throw new HttpsError("permission-denied", "Only the group creator can register beacons");
     }
+
+    await checkGroupNotBlocked(db, groupId);
+    await validatePlanLimit(db, groupId, "beacons");
 
     const existingBeacon = await db
       .collection("beacons")
