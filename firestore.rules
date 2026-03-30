@@ -52,6 +52,13 @@ service cloud.firestore {
       allow create, update, delete: if false;
     }
 
+    // Beacons: read by group members, write only via Cloud Functions (server-side)
+    match /beacons/{beaconId} {
+      allow read: if isAuth() &&
+        isMemberOfGroup(resource.data.groupId);
+      allow create, update, delete: if false;
+    }
+
     // ApiKeys: server-side only, no client access
     match /apiKeys/{keyId} {
       allow read, write: if false;
