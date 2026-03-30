@@ -59,6 +59,23 @@ service cloud.firestore {
       allow create, update, delete: if false;
     }
 
+    // Plans: read by anyone authenticated, write only server-side
+    match /plans/{planId} {
+      allow read: if isAuth();
+      allow create, update, delete: if false;
+    }
+
+    // Subscriptions: read by group members, write only server-side
+    match /subscriptions/{groupId} {
+      allow read: if isAuth() && isMemberOfGroup(groupId);
+      allow create, update, delete: if false;
+    }
+
+    // Admin users: server-side only
+    match /adminUsers/{uid} {
+      allow read, write: if false;
+    }
+
     // ApiKeys: server-side only, no client access
     match /apiKeys/{keyId} {
       allow read, write: if false;

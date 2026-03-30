@@ -1,6 +1,7 @@
 import { onCall, HttpsError } from "firebase-functions/v2/https";
 import { getFirestore, FieldValue, Timestamp } from "firebase-admin/firestore";
 import { AlertStatus, MemberRole } from "../models/index.js";
+import { validateAlertId, validateZoneName } from "../utils/validation.js";
 
 export const acceptAlert = onCall(
   { region: "europe-west1" },
@@ -11,8 +12,9 @@ export const acceptAlert = onCall(
 
     const { alertId, zone } = request.data as { alertId?: string; zone?: string };
 
-    if (!alertId || typeof alertId !== "string") {
-      throw new HttpsError("invalid-argument", "alertId is required");
+    validateAlertId(alertId);
+    if (zone !== undefined && zone !== null) {
+      validateZoneName(zone);
     }
 
     const db = getFirestore();

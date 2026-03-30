@@ -44,39 +44,39 @@ class HistoryViewModel @Inject constructor(
     fun loadHistory() {
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true, error = null)
-            try {
-                val groupId = preferencesRepository.groupId.first()
-                val rawHistory = alertRepository.getHistory(groupId)
-                val items = rawHistory.map { entry ->
-                    val createdAt = (entry["createdAt"] as? Number)?.toLong() ?: 0L
-                    val respondedAt = (entry["respondedAt"] as? Number)?.toLong() ?: 0L
-                    HistoryItem(
-                        alertId = entry["alertId"] as? String ?: "",
-                        date = createdAt,
-                        alerterName = entry["alerterName"] as? String ?: "",
-                        responderName = entry["responderName"] as? String ?: "—",
-                        responseTimeMs = if (respondedAt > 0) respondedAt - createdAt else 0L
+            val groupId = preferencesRepository.groupId.first()
+            alertRepository.getHistory(groupId)
+                .onSuccess { rawHistory ->
+                    val items = rawHistory.map { entry ->
+                        val createdAt = (entry["createdAt"] as? Number)?.toLong() ?: 0L
+                        val respondedAt = (entry["respondedAt"] as? Number)?.toLong() ?: 0L
+                        HistoryItem(
+                            alertId = entry["alertId"] as? String ?: "",
+                            date = createdAt,
+                            alerterName = entry["alerterName"] as? String ?: "",
+                            responderName = entry["responderName"] as? String ?: "—",
+                            responseTimeMs = if (respondedAt > 0) respondedAt - createdAt else 0L
+                        )
+                    }
+                    val avgMs = if (items.isNotEmpty()) {
+                        items.filter { it.responseTimeMs > 0 }.let { responded ->
+                            if (responded.isNotEmpty()) responded.map { it.responseTimeMs }.average().toLong() / 1000
+                            else 0L
+                        }
+                    } else 0L
+
+                    _uiState.value = HistoryUiState(
+                        items = items,
+                        totalAlerts = items.size,
+                        avgResponseTimeSec = avgMs,
+                        isLoading = false
+                    )
+                }.onFailure { e ->
+                    _uiState.value = _uiState.value.copy(
+                        isLoading = false,
+                        error = "Error al cargar historial: ${e.message}"
                     )
                 }
-                val avgMs = if (items.isNotEmpty()) {
-                    items.filter { it.responseTimeMs > 0 }.let { responded ->
-                        if (responded.isNotEmpty()) responded.map { it.responseTimeMs }.average().toLong() / 1000
-                        else 0L
-                    }
-                } else 0L
-
-                _uiState.value = HistoryUiState(
-                    items = items,
-                    totalAlerts = items.size,
-                    avgResponseTimeSec = avgMs,
-                    isLoading = false
-                )
-            } catch (e: Exception) {
-                _uiState.value = _uiState.value.copy(
-                    isLoading = false,
-                    error = "Error al cargar historial: ${e.message}"
-                )
-            }
         }
     }
 }

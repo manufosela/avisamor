@@ -1,6 +1,7 @@
 import { onRequest } from "firebase-functions/v2/https";
 import { getFirestore, FieldValue, Timestamp } from "firebase-admin/firestore";
 import { compare } from "bcryptjs";
+import { logger } from "firebase-functions/v2";
 import { AlertStatus, TriggerSource } from "../models/index.js";
 
 const DEBOUNCE_SECONDS = 30;
@@ -35,19 +36,37 @@ export const triggerAlert = onRequest(
 
     // Find matching key by comparing bcrypt hash
     let groupId: string | null = null;
+    let matchedKeyId: string | null = null;
     for (const doc of keysSnapshot.docs) {
       const data = doc.data();
       const match = await compare(apiKey, data.keyHash);
       if (match) {
+        // Check key expiration (OWASP A07)
+        const expiresAt = data.expiresAt as Timestamp | null | undefined;
+        if (expiresAt && expiresAt.toMillis() < Date.now()) {
+          logger.warn("API key expired", { keyId: doc.id, groupId: data.groupId });
+          res.status(401).json({ error: "API key expired" });
+          return;
+        }
         groupId = data.groupId;
+        matchedKeyId = doc.id;
         break;
       }
     }
 
-    if (!groupId) {
+    if (!groupId || !matchedKeyId) {
+      logger.warn("API key authentication failed", {
+        ip: req.ip,
+        reason: "invalid_key",
+      });
       res.status(401).json({ error: "Invalid API key" });
       return;
     }
+
+    // Audit: update lastUsedAt (OWASP A09)
+    db.collection("apiKeys").doc(matchedKeyId).update({
+      lastUsedAt: FieldValue.serverTimestamp(),
+    }).catch((err) => logger.error("Failed to update lastUsedAt", { keyId: matchedKeyId, error: err }));
 
     // Transaction: debounce check + create alert
     try {
@@ -88,8 +107,10 @@ export const triggerAlert = onRequest(
         return;
       }
 
+      logger.info("Alert triggered via API key", { keyId: matchedKeyId, groupId, alertId });
       res.status(200).json({ alertId });
     } catch (error) {
+      logger.error("Error creating alert via API", { keyId: matchedKeyId, groupId, error });
       res.status(500).json({ error: "Internal server error" });
     }
   },

@@ -79,15 +79,14 @@ class SetupViewModel @Inject constructor(
     fun createGroup() {
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true, error = null)
-            try {
-                val result = groupRepository.createGroup(
-                    name = _uiState.value.name,
-                    role = _uiState.value.role
-                )
+            groupRepository.createGroup(
+                name = _uiState.value.name,
+                role = _uiState.value.role
+            ).onSuccess { result ->
                 val groupId = result["groupId"] as? String ?: ""
                 val groupCode = result["code"] as? String ?: ""
                 saveAndFinish(groupId, groupCode)
-            } catch (e: Exception) {
+            }.onFailure { e ->
                 _uiState.value = _uiState.value.copy(
                     isLoading = false,
                     error = "Error al crear grupo: ${e.message}"
@@ -104,15 +103,14 @@ class SetupViewModel @Inject constructor(
         }
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true, error = null)
-            try {
-                val result = groupRepository.joinGroup(
-                    code = code,
-                    displayName = _uiState.value.name,
-                    role = _uiState.value.role
-                )
+            groupRepository.joinGroup(
+                code = code,
+                displayName = _uiState.value.name,
+                role = _uiState.value.role
+            ).onSuccess { result ->
                 val groupId = result["groupId"] as? String ?: ""
                 saveAndFinish(groupId, code)
-            } catch (e: Exception) {
+            }.onFailure { e ->
                 _uiState.value = _uiState.value.copy(
                     isLoading = false,
                     error = "Error al unirse: ${e.message}"
@@ -137,8 +135,9 @@ class SetupViewModel @Inject constructor(
         try {
             val token = firebaseMessaging.token.await()
             groupRepository.registerFcmToken(groupId, token)
+            // Result failure is best-effort; will retry on next token refresh
         } catch (_: Exception) {
-            // Token registration is best-effort; will retry on next token refresh
+            // Token retrieval failed; will retry on next token refresh
         }
 
         _uiState.value = _uiState.value.copy(isLoading = false, setupComplete = true)

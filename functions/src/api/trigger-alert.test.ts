@@ -36,6 +36,15 @@ vi.mock("firebase-admin/app", () => ({
   getApps: () => [{}],
 }));
 
+const mockLoggerWarn = vi.fn();
+const mockLoggerInfo = vi.fn();
+const mockLoggerError = vi.fn();
+vi.mock("firebase-functions/v2", () => ({
+  logger: { warn: mockLoggerWarn, info: mockLoggerInfo, error: mockLoggerError },
+}));
+
+const mockUpdate = vi.fn().mockResolvedValue(undefined);
+
 const mockCompare = vi.fn();
 vi.mock("bcryptjs", () => ({
   compare: mockCompare,
@@ -94,7 +103,7 @@ describe("triggerAlert HTTP endpoint", () => {
     mockCompare.mockResolvedValue(false);
     mockGet.mockResolvedValueOnce({
       empty: false,
-      docs: [{ data: () => ({ keyHash: "hashed", groupId: "g1", active: true }) }],
+      docs: [{ id: "key-doc-1", data: () => ({ keyHash: "hashed", groupId: "g1", active: true }) }],
     });
 
     await import("./trigger-alert.js");
@@ -112,8 +121,11 @@ describe("triggerAlert HTTP endpoint", () => {
     // apiKeys query
     mockGet.mockResolvedValueOnce({
       empty: false,
-      docs: [{ data: () => ({ keyHash: "hashed", groupId: "g1", active: true }) }],
+      docs: [{ id: "key-doc-1", data: () => ({ keyHash: "hashed", groupId: "g1", active: true }) }],
     });
+
+    // Mock update for lastUsedAt
+    mockDoc.mockReturnValue({ set: mockSet, id: "alert-id-123", update: mockUpdate });
 
     // Transaction: debounce finds active alert
     mockRunTransaction.mockImplementation(async (fn: (t: unknown) => Promise<unknown>) => {
@@ -138,8 +150,11 @@ describe("triggerAlert HTTP endpoint", () => {
     // apiKeys query
     mockGet.mockResolvedValueOnce({
       empty: false,
-      docs: [{ data: () => ({ keyHash: "hashed", groupId: "g1", active: true }) }],
+      docs: [{ id: "key-doc-1", data: () => ({ keyHash: "hashed", groupId: "g1", active: true }) }],
     });
+
+    // Mock update for lastUsedAt
+    mockDoc.mockReturnValue({ set: mockSet, id: "alert-id-123", update: mockUpdate });
 
     // Transaction: no active alerts, create succeeds
     mockRunTransaction.mockImplementation(async (fn: (t: unknown) => Promise<unknown>) => {
@@ -164,5 +179,60 @@ describe("triggerAlert HTTP endpoint", () => {
     const res = makeRes();
     await capturedHandler({ headers: { "x-api-key": "key" }, method: "GET" }, res);
     expect(res.status).toHaveBeenCalledWith(405);
+  });
+
+  it("should return 401 if API key is expired", async () => {
+    mockCompare.mockResolvedValue(true);
+
+    const expiredTimestamp = {
+      toMillis: () => Date.now() - 86400000, // expired 1 day ago
+    };
+
+    mockGet.mockResolvedValueOnce({
+      empty: false,
+      docs: [{
+        id: "key-doc-1",
+        data: () => ({ keyHash: "hashed", groupId: "g1", active: true, expiresAt: expiredTimestamp }),
+      }],
+    });
+
+    await import("./trigger-alert.js");
+    const res = makeRes();
+    await capturedHandler(
+      { headers: { "x-api-key": "valid-key" }, method: "POST" },
+      res,
+    );
+    expect(res.status).toHaveBeenCalledWith(401);
+    expect(res.json).toHaveBeenCalledWith({ error: "API key expired" });
+  });
+
+  it("should allow API key without expiresAt (no expiration)", async () => {
+    mockCompare.mockResolvedValue(true);
+
+    mockGet.mockResolvedValueOnce({
+      empty: false,
+      docs: [{
+        id: "key-doc-1",
+        data: () => ({ keyHash: "hashed", groupId: "g1", active: true, expiresAt: null }),
+      }],
+    });
+
+    // Mock update for lastUsedAt
+    mockDoc.mockReturnValue({ set: mockSet, id: "alert-id-123", update: mockUpdate });
+
+    mockRunTransaction.mockImplementation(async (fn: (t: unknown) => Promise<unknown>) => {
+      return fn({
+        get: vi.fn().mockResolvedValue({ empty: true }),
+        set: vi.fn(),
+      });
+    });
+
+    await import("./trigger-alert.js");
+    const res = makeRes();
+    await capturedHandler(
+      { headers: { "x-api-key": "valid-key" }, method: "POST" },
+      res,
+    );
+    expect(res.status).toHaveBeenCalledWith(200);
   });
 });

@@ -7,4 +7,6 @@ export interface ApiKey {
   createdAt: Timestamp;
   active: boolean;
   label: string;
+  expiresAt?: Timestamp | null;
+  lastUsedAt?: Timestamp | null;
 }

@@ -1,5 +1,6 @@
 import { onCall, HttpsError } from "firebase-functions/v2/https";
 import { getFirestore } from "firebase-admin/firestore";
+import { validateGroupId, validateFcmToken } from "../utils/validation.js";
 
 export const registerFcmToken = onCall(
   { region: "europe-west1" },
@@ -13,13 +14,8 @@ export const registerFcmToken = onCall(
       fcmToken?: string;
     };
 
-    if (!groupId || typeof groupId !== "string") {
-      throw new HttpsError("invalid-argument", "Group ID is required");
-    }
-
-    if (!fcmToken || typeof fcmToken !== "string") {
-      throw new HttpsError("invalid-argument", "FCM token is required");
-    }
+    validateGroupId(groupId);
+    validateFcmToken(fcmToken);
 
     const db = getFirestore();
     const compositeKey = `${groupId}_${request.auth.uid}`;

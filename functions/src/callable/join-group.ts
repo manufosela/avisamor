@@ -2,6 +2,7 @@ import { onCall, HttpsError } from "firebase-functions/v2/https";
 import { getFirestore, FieldValue } from "firebase-admin/firestore";
 import { MemberRole } from "../models/index.js";
 import type { GroupMember } from "../models/index.js";
+import { validateDisplayName, validateGroupCode } from "../utils/validation.js";
 
 export const joinGroup = onCall(
   { region: "europe-west1" },
@@ -16,13 +17,8 @@ export const joinGroup = onCall(
       role?: string;
     };
 
-    if (!code || typeof code !== "string") {
-      throw new HttpsError("invalid-argument", "Code is required");
-    }
-
-    if (!displayName || typeof displayName !== "string") {
-      throw new HttpsError("invalid-argument", "Display name is required");
-    }
+    validateGroupCode(code);
+    validateDisplayName(displayName);
 
     if (!role || !Object.values(MemberRole).includes(role as MemberRole)) {
       throw new HttpsError("invalid-argument", "Valid role is required (alerter or responder)");

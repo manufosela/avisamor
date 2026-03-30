@@ -85,13 +85,10 @@ class AvisamorFcmService : FirebaseMessagingService() {
     override fun onNewToken(token: String) {
         super.onNewToken(token)
         serviceScope.launch {
-            try {
-                val groupId = preferencesRepository.getGroupIdSync()
-                if (groupId.isNotBlank()) {
-                    groupRepository.registerFcmToken(groupId, token)
-                }
-            } catch (_: Exception) {
-                // Will retry on next app open
+            val groupId = preferencesRepository.getGroupIdSync()
+            if (groupId.isNotBlank()) {
+                groupRepository.registerFcmToken(groupId, token)
+                // Result failure is ignored — will retry on next app open
             }
         }
     }
