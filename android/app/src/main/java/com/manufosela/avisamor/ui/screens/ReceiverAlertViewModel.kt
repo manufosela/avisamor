@@ -53,7 +53,8 @@ class ReceiverAlertViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isAccepting = true, error = null)
             try {
-                alertRepository.acceptAlert(alertId)
+                val zone = preferencesRepository.getCurrentZone()
+                alertRepository.acceptAlert(alertId, zone)
                 _uiState.value = _uiState.value.copy(isAccepting = false, accepted = true)
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(
