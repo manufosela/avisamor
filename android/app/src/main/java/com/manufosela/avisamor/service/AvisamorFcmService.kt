@@ -69,7 +69,13 @@ class AvisamorFcmService : FirebaseMessagingService() {
 
     private fun handleAlertAccepted(data: Map<String, String>, alertId: String) {
         val acceptorName = data["acceptorName"] ?: "Alguien"
-        NotificationHelper.showAcceptedNotification(this, acceptorName, alertId)
+        val acceptorZone = data["acceptedByZone"]
+        val message = if (!acceptorZone.isNullOrBlank()) {
+            "$acceptorName va desde $acceptorZone"
+        } else {
+            "$acceptorName va en camino"
+        }
+        NotificationHelper.showAcceptedNotification(this, message, alertId)
     }
 
     private fun handleAlertDismissed(alertId: String) {
