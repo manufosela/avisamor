@@ -19,6 +19,7 @@ export { registerBeacon, listBeacons } from "./callable/register-beacon.js";
 export { updateMemberZone } from "./callable/update-member-zone.js";
 export { getPlans } from "./callable/get-plans.js";
 export { deleteMyData } from "./callable/delete-my-data.js";
+export { setAdminClaim, adminListGroups, adminGetDashboard, adminUpdateGroup } from "./callable/admin.js";
 export { onAlertCreated } from "./triggers/on-alert-created.js";
 export { onAlertUpdated } from "./triggers/on-alert-updated.js";
 export { expireAlerts } from "./scheduled/expire-alerts.js";
