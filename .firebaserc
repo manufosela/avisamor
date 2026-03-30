@@ -1,1 +1,13 @@
-{"projects":{"default":"avisador-avisamor"}}
+{
+  "projects": {
+    "default": "avisador-avisamor"
+  },
+  "targets": {
+    "avisador-avisamor": {
+      "hosting": {
+        "pwa": ["avisador-avisamor"],
+        "admin": ["avisador-avisamor-admin"]
+      }
+    }
+  }
+}
