@@ -14,6 +14,7 @@ import com.manufosela.avisamor.ui.screens.AlerterScreen
 import com.manufosela.avisamor.ui.screens.HistoryScreen
 import com.manufosela.avisamor.ui.screens.ReceiverAlertScreen
 import com.manufosela.avisamor.ui.screens.SettingsScreen
+import com.manufosela.avisamor.ui.screens.BeaconSetupScreen
 import com.manufosela.avisamor.ui.screens.SetupScreen
 import com.manufosela.avisamor.ui.screens.StartDestinationViewModel
 
@@ -77,7 +78,14 @@ fun AvisamorNavHost() {
                     navController.navigate("setup") {
                         popUpTo(navController.graph.id) { inclusive = true }
                     }
-                }
+                },
+                onNavigateToBeaconSetup = { navController.navigate("beacon_setup") }
+            )
+        }
+
+        composable("beacon_setup") {
+            BeaconSetupScreen(
+                onBack = { navController.popBackStack() }
             )
         }
 
