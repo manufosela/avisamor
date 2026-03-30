@@ -35,6 +35,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 fun SettingsScreen(
     onBack: () -> Unit,
     onLeftGroup: () -> Unit,
+    onNavigateToBeaconSetup: () -> Unit = {},
     viewModel: SettingsViewModel = hiltViewModel()
 ) {
     val state by viewModel.uiState.collectAsState()
@@ -94,6 +95,17 @@ fun SettingsScreen(
                 checked = state.flashEnabled,
                 onCheckedChange = { viewModel.toggleFlash(it) }
             )
+
+            Spacer(modifier = Modifier.height(24.dp))
+            Text("Localización", style = MaterialTheme.typography.titleMedium)
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Button(
+                onClick = onNavigateToBeaconSetup,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text("Configurar beacons")
+            }
 
             Spacer(modifier = Modifier.weight(1f))
 
