@@ -9,6 +9,9 @@ export interface Group {
   alertExpirySeconds: number;
   escalateTo112: boolean;
   escalateAfterSeconds: number;
+  planId: string;
+  blocked: boolean;
+  blockedReason?: string | null;
 }
 
 export enum MemberRole {

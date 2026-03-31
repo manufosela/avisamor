@@ -1,7 +1,9 @@
 import { onCall, HttpsError } from "firebase-functions/v2/https";
 import { getFirestore, FieldValue, Timestamp } from "firebase-admin/firestore";
-import { MemberRole } from "../models/index.js";
+import { MemberRole, DEFAULT_PLAN_ID } from "../models/index.js";
 import type { Group, GroupMember } from "../models/index.js";
+import { validateDisplayName } from "../utils/validation.js";
+import { validatePlanLimit } from "../helpers/plan-limits.js";
 
 function generateCode(): string {
   return Math.floor(100000 + Math.random() * 900000).toString();
@@ -32,15 +34,17 @@ export const createGroup = onCall(
 
     const { name, role } = request.data as { name?: string; role?: string };
 
-    if (!name || typeof name !== "string") {
-      throw new HttpsError("invalid-argument", "Name is required");
-    }
+    validateDisplayName(name);
 
     if (!role || !Object.values(MemberRole).includes(role as MemberRole)) {
       throw new HttpsError("invalid-argument", "Valid role is required (alerter or responder)");
     }
 
     const db = getFirestore();
+
+    // Check plan limit for groups (pass ownerUid as groupId for count)
+    await validatePlanLimit(db, request.auth.uid, "groups", DEFAULT_PLAN_ID);
+
     const code = await generateUniqueCode(db);
 
     const groupRef = db.collection("groups").doc();
@@ -55,6 +59,8 @@ export const createGroup = onCall(
       alertExpirySeconds: 60,
       escalateTo112: false,
       escalateAfterSeconds: 0,
+      planId: DEFAULT_PLAN_ID,
+      blocked: false,
     };
 
     await groupRef.set(groupData);

@@ -1,5 +1,6 @@
 import { onCall, HttpsError } from "firebase-functions/v2/https";
 import { getFirestore } from "firebase-admin/firestore";
+import { validateGroupId } from "../utils/validation.js";
 
 export const getHistory = onCall(
   { region: "europe-west1" },
@@ -14,9 +15,7 @@ export const getHistory = onCall(
       startAfter?: string;
     };
 
-    if (!groupId || typeof groupId !== "string") {
-      throw new HttpsError("invalid-argument", "groupId is required");
-    }
+    validateGroupId(groupId);
 
     const db = getFirestore();
     const uid = request.auth.uid;

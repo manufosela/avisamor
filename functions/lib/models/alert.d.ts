@@ -1,15 +1,15 @@
 import { type Timestamp } from "firebase-admin/firestore";
 export declare enum AlertStatus {
-    ACTIVE = "ACTIVE",
-    ACCEPTED = "ACCEPTED",
-    RESOLVED = "RESOLVED",
-    CANCELLED = "CANCELLED",
-    EXPIRED = "EXPIRED"
+    ACTIVE = "active",
+    ACCEPTED = "accepted",
+    RESOLVED = "resolved",
+    CANCELLED = "cancelled",
+    EXPIRED = "expired"
 }
 export declare enum TriggerSource {
-    FLIC = "FLIC",
-    PWA = "PWA",
-    ANDROID = "ANDROID"
+    FLIC = "flic",
+    PWA = "pwa",
+    ANDROID = "android"
 }
 export interface AcceptedByEntry {
     uid: string;

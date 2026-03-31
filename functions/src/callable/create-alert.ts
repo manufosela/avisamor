@@ -1,6 +1,7 @@
 import { onCall, HttpsError } from "firebase-functions/v2/https";
 import { getFirestore, FieldValue, Timestamp } from "firebase-admin/firestore";
 import { AlertStatus, TriggerSource, MemberRole } from "../models/index.js";
+import { validateGroupId } from "../utils/validation.js";
 
 const DEBOUNCE_SECONDS = 30;
 const ALERT_EXPIRY_MS = 60_000;
@@ -14,9 +15,7 @@ export const createAlert = onCall(
 
     const { groupId, source } = request.data as { groupId?: string; source?: string };
 
-    if (!groupId || typeof groupId !== "string") {
-      throw new HttpsError("invalid-argument", "groupId is required");
-    }
+    validateGroupId(groupId);
 
     const db = getFirestore();
     const uid = request.auth.uid;

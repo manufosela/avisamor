@@ -1,6 +1,7 @@
 import { onCall, HttpsError } from "firebase-functions/v2/https";
 import { getFirestore, FieldValue } from "firebase-admin/firestore";
 import { AlertStatus, MemberRole, isValidTransition } from "../models/index.js";
+import { validateAlertId } from "../utils/validation.js";
 
 export const resolveAlert = onCall(
   { region: "europe-west1" },
@@ -11,9 +12,7 @@ export const resolveAlert = onCall(
 
     const { alertId } = request.data as { alertId?: string };
 
-    if (!alertId || typeof alertId !== "string") {
-      throw new HttpsError("invalid-argument", "alertId is required");
-    }
+    validateAlertId(alertId);
 
     const db = getFirestore();
     const uid = request.auth.uid;
@@ -68,9 +67,7 @@ export const cancelAlert = onCall(
 
     const { alertId } = request.data as { alertId?: string };
 
-    if (!alertId || typeof alertId !== "string") {
-      throw new HttpsError("invalid-argument", "alertId is required");
-    }
+    validateAlertId(alertId);
 
     const db = getFirestore();
     const uid = request.auth.uid;

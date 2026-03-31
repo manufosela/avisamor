@@ -1,5 +1,6 @@
 import { onCall, HttpsError } from "firebase-functions/v2/https";
 import { getFirestore, FieldValue, Timestamp } from "firebase-admin/firestore";
+import { validateGroupId, validateZoneName } from "../utils/validation.js";
 
 const RATE_LIMIT_MS = 30_000;
 
@@ -16,12 +17,8 @@ export const updateMemberZone = onCall(
       beaconId?: string;
     };
 
-    if (!groupId || typeof groupId !== "string") {
-      throw new HttpsError("invalid-argument", "groupId is required");
-    }
-    if (!zone || typeof zone !== "string") {
-      throw new HttpsError("invalid-argument", "zone is required");
-    }
+    validateGroupId(groupId);
+    validateZoneName(zone);
 
     const db = getFirestore();
     const memberId = `${groupId}_${request.auth.uid}`;

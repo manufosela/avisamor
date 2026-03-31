@@ -10,8 +10,8 @@ export interface Group {
     escalateAfterSeconds: number;
 }
 export declare enum MemberRole {
-    ALERTER = "ALERTER",
-    RESPONDER = "RESPONDER"
+    ALERTER = "alerter",
+    RESPONDER = "responder"
 }
 export interface GroupMember {
     memberId: string;
@@ -19,7 +19,9 @@ export interface GroupMember {
     groupId: string;
     role: MemberRole;
     displayName: string;
-    fcmToken: string;
+    fcmToken: string | null;
     joinedAt: Timestamp;
+    currentZone?: string | null;
+    currentZoneUpdatedAt?: Timestamp | null;
 }
 //# sourceMappingURL=group.d.ts.map

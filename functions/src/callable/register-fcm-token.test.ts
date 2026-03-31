@@ -64,7 +64,7 @@ describe("registerFcmToken callable", () => {
     await import("./register-fcm-token.js");
     await expect(
       capturedHandler({ auth: { uid: "user1" }, data: { fcmToken: "token123" } })
-    ).rejects.toThrow("Group ID is required");
+    ).rejects.toThrow("groupId is required");
   });
 
   it("should throw invalid-argument if fcmToken is missing", async () => {
