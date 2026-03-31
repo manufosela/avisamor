@@ -1,8 +1,6 @@
 package com.manufosela.avisamor.data.repository
 
 import com.google.firebase.functions.FirebaseFunctions
-import com.google.firebase.functions.FirebaseFunctionsException
-import com.manufosela.avisamor.data.validation.InputValidator
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -25,11 +23,7 @@ class BeaconRepository @Inject constructor(
         zoneName: String,
         floor: Int,
         rssiAtOneMeter: Int = -59
-    ): Result<Map<String, Any>> = runCatching {
-        InputValidator.validateGroupId(groupId)
-        InputValidator.validateBeaconId(beaconId)
-        InputValidator.validateZoneName(zoneName)
-
+    ): Map<String, Any> {
         val data = hashMapOf(
             "groupId" to groupId,
             "beaconId" to beaconId,
@@ -38,18 +32,18 @@ class BeaconRepository @Inject constructor(
             "rssiAtOneMeter" to rssiAtOneMeter
         )
         val result = functions.getHttpsCallable("registerBeacon").call(data).await()
-        parseMapResponse(result.data)
+        @Suppress("UNCHECKED_CAST")
+        return result.data as Map<String, Any>
     }
 
-    suspend fun listBeacons(groupId: String): Result<List<BeaconInfo>> = runCatching {
-        InputValidator.validateGroupId(groupId)
-
+    suspend fun listBeacons(groupId: String): List<BeaconInfo> {
         val data = hashMapOf("groupId" to groupId)
         val result = functions.getHttpsCallable("listBeacons").call(data).await()
-        val response = parseMapResponse(result.data)
+        @Suppress("UNCHECKED_CAST")
+        val response = result.data as Map<String, Any>
         @Suppress("UNCHECKED_CAST")
         val beacons = response["beacons"] as? List<Map<String, Any>> ?: emptyList()
-        beacons.map { b ->
+        return beacons.map { b ->
             BeaconInfo(
                 id = b["id"] as? String ?: "",
                 beaconId = b["beaconId"] as? String ?: "",
@@ -60,11 +54,7 @@ class BeaconRepository @Inject constructor(
         }
     }
 
-    suspend fun updateMyZone(groupId: String, zone: String, beaconId: String? = null): Result<Unit> = runCatching {
-        InputValidator.validateGroupId(groupId)
-        InputValidator.validateZoneName(zone)
-        if (beaconId != null) InputValidator.validateBeaconId(beaconId)
-
+    suspend fun updateMyZone(groupId: String, zone: String, beaconId: String? = null) {
         val data = hashMapOf<String, Any>(
             "groupId" to groupId,
             "zone" to zone
@@ -73,11 +63,5 @@ class BeaconRepository @Inject constructor(
             data["beaconId"] = beaconId
         }
         functions.getHttpsCallable("updateMemberZone").call(data).await()
-    }
-
-    private fun parseMapResponse(data: Any?): Map<String, Any> {
-        @Suppress("UNCHECKED_CAST")
-        return (data as? Map<String, Any>)
-            ?: throw FirebaseFunctionsException("Unexpected response format", FirebaseFunctionsException.Code.INTERNAL, null)
     }
 }

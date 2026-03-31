@@ -52,16 +52,16 @@ class ReceiverAlertViewModel @Inject constructor(
         val alertId = alertIdFromNav ?: _uiState.value.activeAlert?.alertId ?: return
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isAccepting = true, error = null)
-            val zone = preferencesRepository.getCurrentZone()
-            alertRepository.acceptAlert(alertId, zone)
-                .onSuccess {
-                    _uiState.value = _uiState.value.copy(isAccepting = false, accepted = true)
-                }.onFailure { e ->
-                    _uiState.value = _uiState.value.copy(
-                        isAccepting = false,
-                        error = "Error al aceptar: ${e.message}"
-                    )
-                }
+            try {
+                val zone = preferencesRepository.getCurrentZone()
+                alertRepository.acceptAlert(alertId, zone)
+                _uiState.value = _uiState.value.copy(isAccepting = false, accepted = true)
+            } catch (e: Exception) {
+                _uiState.value = _uiState.value.copy(
+                    isAccepting = false,
+                    error = "Error al aceptar: ${e.message}"
+                )
+            }
         }
     }
 }

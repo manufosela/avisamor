@@ -1,0 +1,66 @@
+---
+import Layout from '../layouts/Layout.astro';
+---
+<Layout title="Términos de Servicio - Avisamor">
+  <div class="legal-page">
+    <a href="/" class="back-link">&larr; Volver a Avisamor</a>
+    <h1>Términos de Servicio</h1>
+    <p class="updated">Última actualización: 30 de marzo de 2026</p>
+
+    <h2>1. Descripción del servicio</h2>
+    <p>Avisamor es una aplicación de alertas para personas dependientes en el hogar o residencia. Permite a una persona dependiente enviar una alerta y a sus cuidadores recibirla y responder.</p>
+
+    <h2>2. Planes disponibles</h2>
+    <table>
+      <thead>
+        <tr><th>Plan</th><th>Precio</th><th>Grupos</th><th>Miembros</th><th>Beacons</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Gratuito</td><td>0 €</td><td>1</td><td>5</td><td>3</td></tr>
+        <tr><td>Familia</td><td>3 €/mes</td><td>1</td><td>10</td><td>10</td></tr>
+        <tr><td>Residencia</td><td>20 €/mes</td><td>Ilimitados</td><td>50</td><td>Ilimitados</td></tr>
+      </tbody>
+    </table>
+    <p>Los planes de pago se gestionan manualmente. Contacte con <a href="mailto:avisamor@avisablue.com">avisamor@avisablue.com</a> para solicitar una mejora de plan.</p>
+
+    <h2>3. Uso aceptable</h2>
+    <ul>
+      <li>La aplicación es para uso legítimo de alerta y cuidado de personas dependientes.</li>
+      <li>Queda prohibido el uso para enviar alertas falsas, spam o cualquier uso malintencionado.</li>
+      <li>Nos reservamos el derecho de bloquear grupos que incumplan estas condiciones.</li>
+    </ul>
+
+    <h2>4. Disponibilidad</h2>
+    <p>El servicio se ofrece "tal cual" sin garantías de disponibilidad ininterrumpida. Realizamos nuestro mejor esfuerzo para mantener el servicio operativo.</p>
+
+    <h2>5. Limitación de responsabilidad</h2>
+    <p>Avisamor <strong>NO es un servicio de emergencia</strong>. No sustituye al 112 ni a ningún servicio profesional de atención de emergencias. Consulte nuestro <a href="/disclaimer">descargo de responsabilidades</a> para más información.</p>
+
+    <h2>6. Propiedad intelectual</h2>
+    <p>El código fuente de Avisamor es de código abierto. Los contenidos, marca y diseño son propiedad de Mánu Fosela.</p>
+
+    <h2>7. Modificaciones</h2>
+    <p>Estos términos pueden ser modificados. Los cambios se publicarán en esta página. El uso continuado del servicio implica la aceptación de los nuevos términos.</p>
+
+    <h2>8. Legislación aplicable</h2>
+    <p>Estos términos se rigen por la legislación española. Para cualquier controversia, las partes se someten a los juzgados y tribunales de Madrid.</p>
+  </div>
+</Layout>
+
+<style>
+  .legal-page {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 24px 16px 64px;
+    line-height: 1.7;
+    color: #1f2937;
+  }
+  .back-link { color: #dc2626; text-decoration: none; font-size: 0.9rem; }
+  h1 { font-size: 1.8rem; margin-top: 16px; }
+  h2 { font-size: 1.2rem; margin-top: 32px; color: #374151; }
+  .updated { color: #6b7280; font-size: 0.9rem; }
+  table { width: 100%; border-collapse: collapse; margin: 16px 0; }
+  th, td { border: 1px solid #d1d5db; padding: 8px 12px; text-align: left; }
+  th { background: #f3f4f6; }
+  a { color: #dc2626; }
+</style>
