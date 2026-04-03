@@ -9,7 +9,6 @@ import android.media.AudioAttributes
 import android.media.RingtoneManager
 import android.os.Build
 import androidx.core.app.NotificationCompat
-import com.manufosela.avisamor.MainActivity
 import com.manufosela.avisamor.R
 
 object NotificationHelper {
@@ -96,10 +95,8 @@ object NotificationHelper {
     }
 
     fun fullScreenPendingIntent(context: Context, alertId: String): PendingIntent {
-        val deepLinkUri = android.net.Uri.parse("avisamor://alert/$alertId")
-        val intent = Intent(Intent.ACTION_VIEW, deepLinkUri, context, MainActivity::class.java).apply {
+        val intent = Intent(Intent.ACTION_VIEW, android.net.Uri.parse("https://avisablue.com")).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
-            putExtra("is_alert", true)
         }
         return PendingIntent.getActivity(
             context,

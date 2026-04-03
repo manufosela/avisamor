@@ -1,0 +1,12 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.manufosela.avisamor",
+      "sha256_cert_fingerprints": [
+        "DA:B5:D6:C3:4C:32:2F:84:5B:A4:B1:D4:4F:2E:AD:95:AD:7B:AB:BE:26:89:22:1D:73:82:9A:35:DE:27:9F:E7"
+      ]
+    }
+  }
+]
