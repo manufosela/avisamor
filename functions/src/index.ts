@@ -15,6 +15,7 @@ export { createAlert } from "./callable/create-alert.js";
 export { acceptAlert } from "./callable/accept-alert.js";
 export { resolveAlert, cancelAlert } from "./callable/resolve-cancel-alert.js";
 export { getHistory } from "./callable/get-history.js";
+export { myGroups } from "./callable/my-groups.js";
 export { registerBeacon, listBeacons } from "./callable/register-beacon.js";
 export { updateMemberZone } from "./callable/update-member-zone.js";
 export { getPlans } from "./callable/get-plans.js";

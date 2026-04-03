@@ -1,9 +1,9 @@
-import { LitElement, html, css } from 'lit';
+import { LitElement, html, css, nothing } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
-import { app } from '../lib/firebase.js';
-import { getFunctions, httpsCallable } from 'firebase/functions';
+import { functions } from '../lib/firebase.js';
+import { httpsCallable } from 'firebase/functions';
 
-type SetupMode = 'choose' | 'create' | 'create-role' | 'join' | 'join-role' | 'show-code';
+type SetupMode = 'choose' | 'create' | 'join' | 'show-code';
 
 @customElement('avisamor-setup')
 export class AvisamorSetup extends LitElement {
@@ -23,147 +23,82 @@ export class AvisamorSetup extends LitElement {
       text-align: center;
     }
 
-    h1 {
-      font-size: 2rem;
-      margin: 0 0 8px;
-      color: var(--color-danger, #dc2626);
-    }
-
-    p.subtitle {
-      font-size: 1.1rem;
-      color: #6b7280;
-      margin: 0 0 32px;
-    }
+    h1 { font-size: 2rem; margin: 0 0 8px; color: #dc2626; }
+    p.subtitle { font-size: 1.1rem; color: #6b7280; margin: 0 0 32px; }
 
     label {
-      display: block;
-      font-size: 1rem;
-      font-weight: 600;
-      text-align: left;
-      margin-bottom: 8px;
-      color: #374151;
+      display: block; font-size: 1rem; font-weight: 600;
+      text-align: left; margin-bottom: 8px; color: #374151;
     }
 
     input {
-      width: 100%;
-      padding: 14px 16px;
-      font-size: 1.1rem;
-      border: 2px solid #d1d5db;
-      border-radius: 12px;
-      outline: none;
+      width: 100%; padding: 14px 16px; font-size: 1.1rem;
+      border: 2px solid #d1d5db; border-radius: 12px;
+      outline: none; box-sizing: border-box;
       transition: border-color 0.2s;
-      box-sizing: border-box;
     }
+    input:focus-visible { border-color: #dc2626; }
 
-    input:focus-visible {
-      border-color: var(--color-danger, #dc2626);
-      outline: 2px solid var(--color-danger, #dc2626);
-      outline-offset: 2px;
+    .field { margin-bottom: 20px; }
+
+    .role-selector {
+      display: flex; gap: 12px; margin-bottom: 20px;
     }
-
-    input.code-input {
+    .role-btn {
+      flex: 1; padding: 16px 12px; font-size: 0.95rem; font-weight: 700;
+      border: 2px solid #d1d5db; border-radius: 12px;
+      background: #fff; cursor: pointer; transition: all 0.2s;
       text-align: center;
-      font-size: 1.8rem;
-      letter-spacing: 0.5em;
-      font-weight: 700;
+    }
+    .role-btn.selected { border-color: #dc2626; background: #fef2f2; color: #dc2626; }
+    .role-btn:hover { border-color: #dc2626; }
+    .role-label { font-size: 0.8rem; color: #6b7280; font-weight: 400; margin-top: 4px; }
+
+    .buttons { display: flex; flex-direction: column; gap: 12px; margin-top: 24px; }
+
+    button { padding: 16px 24px; font-size: 1.1rem; font-weight: 700; border: none; border-radius: 12px; cursor: pointer; min-height: 48px; }
+    button:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .btn-primary { background: #dc2626; color: #fff; }
+    .btn-secondary { background: #e5e7eb; color: #374151; }
+    .btn-back { background: transparent; color: #6b7280; font-size: 0.95rem; padding: 8px; }
+
+    .code-display {
+      font-size: 1.8rem; font-weight: 800; text-align: center;
+      padding: 24px; background: #f3f4f6; border-radius: 12px;
+      margin: 16px 0; letter-spacing: 0.05em; word-break: break-all;
     }
 
-    .field {
-      margin-bottom: 20px;
-    }
-
-    .buttons {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-      margin-top: 24px;
-    }
-
-    button {
-      padding: 16px 24px;
-      font-size: 1.1rem;
-      font-weight: 700;
-      border: none;
-      border-radius: 12px;
-      cursor: pointer;
-      min-height: 48px;
-      transition: background-color 0.2s, transform 0.1s;
-    }
-
-    button:focus-visible {
-      outline: 2px solid var(--color-danger, #dc2626);
-      outline-offset: 2px;
-    }
-
-    button:active {
-      transform: scale(0.97);
-    }
-
-    button:disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
-      transform: none;
-    }
-
-    .btn-primary {
-      background: var(--color-danger, #dc2626);
-      color: #fff;
-    }
-
-    .btn-secondary {
-      background: #e5e7eb;
-      color: #374151;
-    }
-
-    .btn-back {
-      background: transparent;
-      color: #6b7280;
-      font-size: 0.95rem;
-      padding: 8px;
-    }
+    .info { font-size: 0.9rem; color: #6b7280; margin: 12px 0; text-align: left; }
+    .info strong { color: #374151; }
 
     .error {
-      background: #fef2f2;
-      border: 1px solid #fecaca;
-      color: var(--color-danger, #dc2626);
-      padding: 12px;
-      border-radius: 8px;
-      margin-top: 16px;
-      font-size: 0.95rem;
+      background: #fef2f2; border: 1px solid #fecaca; color: #dc2626;
+      padding: 12px; border-radius: 8px; margin-top: 16px; font-size: 0.95rem;
     }
 
     @media (prefers-color-scheme: dark) {
       label { color: #d1d5db; }
       p.subtitle { color: #9ca3af; }
-      input {
-        background: #1f2937;
-        border-color: #4b5563;
-        color: #f9fafb;
-      }
-      input:focus-visible { border-color: #ef4444; }
-      .btn-secondary {
-        background: #374151;
-        color: #e5e7eb;
-      }
-      .error {
-        background: #450a0a;
-        border-color: #7f1d1d;
-        color: #fca5a5;
-      }
+      input { background: #1f2937; border-color: #4b5563; color: #f9fafb; }
+      .role-btn { background: #1f2937; border-color: #4b5563; color: #e5e7eb; }
+      .role-btn.selected { background: #450a0a; border-color: #ef4444; color: #fca5a5; }
+      .role-label { color: #9ca3af; }
+      .btn-secondary { background: #374151; color: #e5e7eb; }
+      .code-display { background: #1f2937; }
+      .info { color: #9ca3af; }
+      .info strong { color: #d1d5db; }
     }
   `;
 
   @state() private _mode: SetupMode = 'choose';
-  @state() private _displayName = '';
   @state() private _groupName = '';
   @state() private _role = '';
   @state() private _code = '';
-  @state() private _groupCode = '';
-  @state() private _groupId = '';
+  @state() private _createdCode = '';
+  @state() private _createdGroupId = '';
   @state() private _loading = false;
   @state() private _error = '';
-
-  private _functions = getFunctions(app, 'europe-west1');
 
   private _setMode(mode: SetupMode): void {
     this._mode = mode;
@@ -171,73 +106,38 @@ export class AvisamorSetup extends LitElement {
   }
 
   private async _createGroup(): Promise<void> {
-    if (!this._displayName.trim()) {
-      this._error = 'Introduce tu nombre';
-      return;
-    }
-
     this._loading = true;
     this._error = '';
-
     try {
-      const createGroupFn = httpsCallable(this._functions, 'createGroup');
-      const result = await createGroupFn({
-        name: this._displayName.trim(),
-        groupName: this._groupName.trim(),
-        role: this._role,
-      });
-
+      const fn = httpsCallable(functions, 'createGroup');
+      const result = await fn({ groupName: this._groupName.trim(), role: this._role });
       const data = result.data as { groupId: string; code: string };
-      this._groupCode = data.code;
-      this._groupId = data.groupId;
-      this._mode = 'show-code' as SetupMode;
+      this._createdCode = data.code;
+      this._createdGroupId = data.groupId;
+      this._mode = 'show-code';
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : 'Error al crear grupo';
-      this._error = message;
+      this._error = err instanceof Error ? err.message : 'Error al crear grupo';
     } finally {
       this._loading = false;
     }
   }
 
   private async _joinGroup(): Promise<void> {
-    if (!this._displayName.trim()) {
-      this._error = 'Introduce tu nombre';
-      return;
-    }
-    if (this._code.length !== 6) {
-      this._error = 'El codigo debe tener 6 digitos';
-      return;
-    }
-
     this._loading = true;
     this._error = '';
-
     try {
-      const joinGroupFn = httpsCallable(this._functions, 'joinGroup');
-      const result = await joinGroupFn({
-        code: this._code,
-        displayName: this._displayName.trim(),
-        role: this._role,
-      });
-
-      const data = result.data as { groupId: string; groupName: string };
+      const fn = httpsCallable(functions, 'joinGroup');
+      const result = await fn({ code: this._code.trim().toLowerCase(), role: this._role });
+      const data = result.data as { groupId: string };
       this.dispatchEvent(new CustomEvent('group-joined', {
-        detail: { groupId: data.groupId },
-        bubbles: true,
-        composed: true,
+        detail: { groupId: data.groupId, role: this._role },
+        bubbles: true, composed: true,
       }));
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : 'Error al unirse al grupo';
-      this._error = message;
+      this._error = err instanceof Error ? err.message : 'Error al unirse';
     } finally {
       this._loading = false;
     }
-  }
-
-  private _onCodeInput(e: InputEvent): void {
-    const input = e.target as HTMLInputElement;
-    this._code = input.value.replace(/\D/g, '').slice(0, 6);
-    input.value = this._code;
   }
 
   render() {
@@ -246,14 +146,12 @@ export class AvisamorSetup extends LitElement {
         <h1>AvisaBlue</h1>
         <p class="subtitle">Alertas para personas dependientes</p>
 
-        ${this._mode === 'choose' ? this._renderChoose() : ''}
-        ${this._mode === 'create' ? this._renderCreate() : ''}
-        ${this._mode === 'create-role' ? this._renderRole('create') : ''}
-        ${this._mode === 'join' ? this._renderJoin() : ''}
-        ${this._mode === 'join-role' ? this._renderRole('join') : ''}
-        ${this._mode === 'show-code' ? this._renderShowCode() : ''}
+        ${this._mode === 'choose' ? this._renderChoose() : nothing}
+        ${this._mode === 'create' ? this._renderCreate() : nothing}
+        ${this._mode === 'join' ? this._renderJoin() : nothing}
+        ${this._mode === 'show-code' ? this._renderShowCode() : nothing}
 
-        ${this._error ? html`<div class="error" role="alert">${this._error}</div>` : ''}
+        ${this._error ? html`<div class="error" role="alert">${this._error}</div>` : nothing}
       </div>
     `;
   }
@@ -274,36 +172,18 @@ export class AvisamorSetup extends LitElement {
   private _renderCreate() {
     return html`
       <div class="field">
-        <label for="group-name">Nombre del grupo</label>
-        <input
-          id="group-name"
-          type="text"
-          placeholder="Ej: Familia García, Residencia Sol"
-          .value=${this._groupName}
-          @input=${(e: InputEvent) => { this._groupName = (e.target as HTMLInputElement).value; }}
-        />
+        <label>Nombre del grupo</label>
+        <input type="text" placeholder="Ej: Familia García" .value=${this._groupName}
+          @input=${(e: InputEvent) => { this._groupName = (e.target as HTMLInputElement).value; }} />
       </div>
-      <div class="field">
-        <label for="name-create">Tu nombre</label>
-        <input
-          id="name-create"
-          type="text"
-          placeholder="Ej: Abuela Carmen"
-          .value=${this._displayName}
-          @input=${(e: InputEvent) => { this._displayName = (e.target as HTMLInputElement).value; }}
-        />
-      </div>
+      ${this._renderRoleSelector()}
       <div class="buttons">
-        <button
-          class="btn-primary"
-          ?disabled=${!this._groupName.trim() || !this._displayName.trim()}
-          @click=${() => this._setMode('create-role')}
-        >
-          Siguiente
+        <button class="btn-primary"
+          ?disabled=${this._loading || !this._groupName.trim() || !this._role}
+          @click=${this._createGroup}>
+          ${this._loading ? 'Creando...' : 'Crear grupo'}
         </button>
-        <button class="btn-back" @click=${() => this._setMode('choose')}>
-          Volver
-        </button>
+        <button class="btn-back" @click=${() => this._setMode('choose')}>Volver</button>
       </div>
     `;
   }
@@ -311,65 +191,36 @@ export class AvisamorSetup extends LitElement {
   private _renderJoin() {
     return html`
       <div class="field">
-        <label for="name-join">Tu nombre</label>
-        <input
-          id="name-join"
-          type="text"
-          placeholder="Ej: María, Carlos"
-          .value=${this._displayName}
-          @input=${(e: InputEvent) => { this._displayName = (e.target as HTMLInputElement).value; }}
-        />
+        <label>Código del grupo</label>
+        <input type="text" placeholder="Ej: zen-wolf-forge" .value=${this._code}
+          @input=${(e: InputEvent) => { this._code = (e.target as HTMLInputElement).value; }} />
       </div>
-      <div class="field">
-        <label for="code-input">Código del grupo</label>
-        <input
-          id="code-input"
-          class="code-input"
-          type="text"
-          inputmode="numeric"
-          maxlength="6"
-          placeholder="000000"
-          .value=${this._code}
-          @input=${this._onCodeInput}
-        />
-      </div>
+      ${this._renderRoleSelector()}
       <div class="buttons">
-        <button
-          class="btn-primary"
-          ?disabled=${!this._displayName.trim() || this._code.length !== 6}
-          @click=${() => this._setMode('join-role')}
-        >
-          Siguiente
+        <button class="btn-primary"
+          ?disabled=${this._loading || !this._code.trim() || !this._role}
+          @click=${this._joinGroup}>
+          ${this._loading ? 'Uniendo...' : 'Unirse al grupo'}
         </button>
-        <button class="btn-back" @click=${() => this._setMode('choose')}>
-          Volver
-        </button>
+        <button class="btn-back" @click=${() => this._setMode('choose')}>Volver</button>
       </div>
     `;
   }
-  private _renderRole(flow: 'create' | 'join') {
-    const action = flow === 'create' ? () => this._createGroup() : () => this._joinGroup();
-    const backMode = flow === 'create' ? 'create' : 'join';
+
+  private _renderRoleSelector() {
     return html`
-      <p style="font-size:1.1rem; font-weight:600; margin-bottom:24px;">¿Cuál es tu rol?</p>
-      <div class="buttons">
-        <button
-          class="btn-primary"
-          ?disabled=${this._loading}
-          @click=${() => { this._role = 'alerter'; action(); }}
-        >
-          ${this._loading ? 'Procesando...' : 'Pido ayuda (persona dependiente)'}
-        </button>
-        <button
-          class="btn-secondary"
-          ?disabled=${this._loading}
-          @click=${() => { this._role = 'responder'; action(); }}
-        >
-          ${this._loading ? 'Procesando...' : 'Doy ayuda (cuidador)'}
-        </button>
-        <button class="btn-back" @click=${() => this._setMode(backMode as SetupMode)} ?disabled=${this._loading}>
-          Volver
-        </button>
+      <label>Tu rol en el grupo</label>
+      <div class="role-selector">
+        <div class="role-btn ${this._role === 'alerter' ? 'selected' : ''}"
+          @click=${() => { this._role = 'alerter'; }}>
+          Pido ayuda
+          <div class="role-label">Persona dependiente</div>
+        </div>
+        <div class="role-btn ${this._role === 'responder' ? 'selected' : ''}"
+          @click=${() => { this._role = 'responder'; }}>
+          Doy ayuda
+          <div class="role-label">Cuidador/a</div>
+        </div>
       </div>
     `;
   }
@@ -377,17 +228,16 @@ export class AvisamorSetup extends LitElement {
   private _renderShowCode() {
     return html`
       <p style="font-size:1.1rem; font-weight:600;">Grupo creado</p>
-      <p>Comparte este código con los cuidadores para que se unan:</p>
-      <div style="font-size:2.5rem; font-weight:800; letter-spacing:0.3em; text-align:center; padding:24px; background:#f3f4f6; border-radius:12px; margin:16px 0;">
-        ${this._groupCode}
+      <div class="code-display">${this._createdCode}</div>
+      <div class="info">
+        <p><strong>Comparte este código</strong> con las personas de tu grupo para que se unan.</p>
+        <p>Los <strong>beacons</strong> (localización por zonas) se configuran desde la app Android en Ajustes → Configurar beacons. Es opcional.</p>
       </div>
-      <p style="font-size:0.9rem; color:#6b7280;">Apunta este código. Los cuidadores lo necesitan para unirse al grupo.</p>
       <div class="buttons">
         <button class="btn-primary" @click=${() => {
           this.dispatchEvent(new CustomEvent('group-joined', {
-            detail: { groupId: this._groupId, code: this._groupCode, role: this._role },
-            bubbles: true,
-            composed: true,
+            detail: { groupId: this._createdGroupId, role: this._role },
+            bubbles: true, composed: true,
           }));
         }}>Continuar</button>
       </div>
