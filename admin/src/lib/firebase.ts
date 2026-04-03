@@ -1,4 +1,5 @@
 import { initializeApp } from 'firebase/app';
+import { initializeAppCheck, ReCaptchaEnterpriseProvider } from 'firebase/app-check';
 import { getAuth } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 import { getFunctions } from 'firebase/functions';
@@ -13,6 +14,15 @@ const firebaseConfig = {
 };
 
 export const app = initializeApp(firebaseConfig);
+
+const recaptchaKey = import.meta.env.PUBLIC_RECAPTCHA_SITE_KEY;
+if (recaptchaKey) {
+  initializeAppCheck(app, {
+    provider: new ReCaptchaEnterpriseProvider(recaptchaKey),
+    isTokenAutoRefreshEnabled: true,
+  });
+}
+
 export const auth = getAuth(app);
 export const db = getFirestore(app);
 export const functions = getFunctions(app, 'europe-west1');
