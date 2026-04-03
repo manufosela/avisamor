@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.expireAlerts = exports.onAlertUpdated = exports.onAlertCreated = exports.updateMemberZone = exports.listBeacons = exports.registerBeacon = exports.getHistory = exports.cancelAlert = exports.resolveAlert = exports.acceptAlert = exports.createAlert = exports.triggerAlert = exports.registerFcmToken = exports.joinGroup = exports.createGroup = void 0;
+exports.expireAlerts = exports.onAlertUpdated = exports.onAlertCreated = exports.adminUpdatePlan = exports.adminCreatePlan = exports.adminCheckSetup = exports.adminUpdateGroup = exports.adminGetDashboard = exports.adminListGroups = exports.setAdminClaim = exports.deleteMyData = exports.getPlans = exports.updateMemberZone = exports.listBeacons = exports.registerBeacon = exports.getHistory = exports.cancelAlert = exports.resolveAlert = exports.acceptAlert = exports.createAlert = exports.triggerAlert = exports.registerFcmToken = exports.joinGroup = exports.createGroup = void 0;
 const app_1 = require("firebase-admin/app");
 const v2_1 = require("firebase-functions/v2");
 if ((0, app_1.getApps)().length === 0) {
@@ -29,6 +29,18 @@ Object.defineProperty(exports, "registerBeacon", { enumerable: true, get: functi
 Object.defineProperty(exports, "listBeacons", { enumerable: true, get: function () { return register_beacon_js_1.listBeacons; } });
 var update_member_zone_js_1 = require("./callable/update-member-zone.js");
 Object.defineProperty(exports, "updateMemberZone", { enumerable: true, get: function () { return update_member_zone_js_1.updateMemberZone; } });
+var get_plans_js_1 = require("./callable/get-plans.js");
+Object.defineProperty(exports, "getPlans", { enumerable: true, get: function () { return get_plans_js_1.getPlans; } });
+var delete_my_data_js_1 = require("./callable/delete-my-data.js");
+Object.defineProperty(exports, "deleteMyData", { enumerable: true, get: function () { return delete_my_data_js_1.deleteMyData; } });
+var admin_js_1 = require("./callable/admin.js");
+Object.defineProperty(exports, "setAdminClaim", { enumerable: true, get: function () { return admin_js_1.setAdminClaim; } });
+Object.defineProperty(exports, "adminListGroups", { enumerable: true, get: function () { return admin_js_1.adminListGroups; } });
+Object.defineProperty(exports, "adminGetDashboard", { enumerable: true, get: function () { return admin_js_1.adminGetDashboard; } });
+Object.defineProperty(exports, "adminUpdateGroup", { enumerable: true, get: function () { return admin_js_1.adminUpdateGroup; } });
+Object.defineProperty(exports, "adminCheckSetup", { enumerable: true, get: function () { return admin_js_1.adminCheckSetup; } });
+Object.defineProperty(exports, "adminCreatePlan", { enumerable: true, get: function () { return admin_js_1.adminCreatePlan; } });
+Object.defineProperty(exports, "adminUpdatePlan", { enumerable: true, get: function () { return admin_js_1.adminUpdatePlan; } });
 var on_alert_created_js_1 = require("./triggers/on-alert-created.js");
 Object.defineProperty(exports, "onAlertCreated", { enumerable: true, get: function () { return on_alert_created_js_1.onAlertCreated; } });
 var on_alert_updated_js_1 = require("./triggers/on-alert-updated.js");

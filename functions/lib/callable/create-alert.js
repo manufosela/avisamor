@@ -4,6 +4,7 @@ exports.createAlert = void 0;
 const https_1 = require("firebase-functions/v2/https");
 const firestore_1 = require("firebase-admin/firestore");
 const index_js_1 = require("../models/index.js");
+const validation_js_1 = require("../utils/validation.js");
 const DEBOUNCE_SECONDS = 30;
 const ALERT_EXPIRY_MS = 60_000;
 exports.createAlert = (0, https_1.onCall)({ region: "europe-west1" }, async (request) => {
@@ -11,9 +12,7 @@ exports.createAlert = (0, https_1.onCall)({ region: "europe-west1" }, async (req
         throw new https_1.HttpsError("unauthenticated", "Authentication required");
     }
     const { groupId, source } = request.data;
-    if (!groupId || typeof groupId !== "string") {
-        throw new https_1.HttpsError("invalid-argument", "groupId is required");
-    }
+    (0, validation_js_1.validateGroupId)(groupId);
     const db = (0, firestore_1.getFirestore)();
     const uid = request.auth.uid;
     // Validate user is alerter in the group

@@ -3,20 +3,16 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.listBeacons = exports.registerBeacon = void 0;
 const https_1 = require("firebase-functions/v2/https");
 const firestore_1 = require("firebase-admin/firestore");
+const validation_js_1 = require("../utils/validation.js");
+const plan_limits_js_1 = require("../helpers/plan-limits.js");
 exports.registerBeacon = (0, https_1.onCall)({ region: "europe-west1" }, async (request) => {
     if (!request.auth) {
         throw new https_1.HttpsError("unauthenticated", "Authentication required");
     }
     const { groupId, beaconId, zoneName, floor, rssiAtOneMeter } = request.data;
-    if (!groupId || typeof groupId !== "string") {
-        throw new https_1.HttpsError("invalid-argument", "groupId is required");
-    }
-    if (!beaconId || typeof beaconId !== "string") {
-        throw new https_1.HttpsError("invalid-argument", "beaconId (UUID) is required");
-    }
-    if (!zoneName || typeof zoneName !== "string") {
-        throw new https_1.HttpsError("invalid-argument", "zoneName is required");
-    }
+    (0, validation_js_1.validateGroupId)(groupId);
+    (0, validation_js_1.validateBeaconId)(beaconId);
+    (0, validation_js_1.validateZoneName)(zoneName);
     if (floor === undefined || typeof floor !== "number") {
         throw new https_1.HttpsError("invalid-argument", "floor is required (number)");
     }
@@ -28,6 +24,8 @@ exports.registerBeacon = (0, https_1.onCall)({ region: "europe-west1" }, async (
     if (groupDoc.data()?.createdBy !== request.auth.uid) {
         throw new https_1.HttpsError("permission-denied", "Only the group creator can register beacons");
     }
+    await (0, plan_limits_js_1.checkGroupNotBlocked)(db, groupId);
+    await (0, plan_limits_js_1.validatePlanLimit)(db, groupId, "beacons");
     const existingBeacon = await db
         .collection("beacons")
         .where("beaconId", "==", beaconId)

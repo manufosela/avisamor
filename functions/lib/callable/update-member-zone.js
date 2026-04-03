@@ -3,18 +3,15 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.updateMemberZone = void 0;
 const https_1 = require("firebase-functions/v2/https");
 const firestore_1 = require("firebase-admin/firestore");
+const validation_js_1 = require("../utils/validation.js");
 const RATE_LIMIT_MS = 30_000;
 exports.updateMemberZone = (0, https_1.onCall)({ region: "europe-west1" }, async (request) => {
     if (!request.auth) {
         throw new https_1.HttpsError("unauthenticated", "Authentication required");
     }
     const { groupId, zone, beaconId } = request.data;
-    if (!groupId || typeof groupId !== "string") {
-        throw new https_1.HttpsError("invalid-argument", "groupId is required");
-    }
-    if (!zone || typeof zone !== "string") {
-        throw new https_1.HttpsError("invalid-argument", "zone is required");
-    }
+    (0, validation_js_1.validateGroupId)(groupId);
+    (0, validation_js_1.validateZoneName)(zone);
     const db = (0, firestore_1.getFirestore)();
     const memberId = `${groupId}_${request.auth.uid}`;
     const memberRef = db.collection("groupMembers").doc(memberId);

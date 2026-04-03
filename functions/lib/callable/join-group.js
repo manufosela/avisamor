@@ -4,17 +4,15 @@ exports.joinGroup = void 0;
 const https_1 = require("firebase-functions/v2/https");
 const firestore_1 = require("firebase-admin/firestore");
 const index_js_1 = require("../models/index.js");
+const validation_js_1 = require("../utils/validation.js");
+const plan_limits_js_1 = require("../helpers/plan-limits.js");
 exports.joinGroup = (0, https_1.onCall)({ region: "europe-west1" }, async (request) => {
     if (!request.auth) {
         throw new https_1.HttpsError("unauthenticated", "Authentication required");
     }
     const { code, displayName, role } = request.data;
-    if (!code || typeof code !== "string") {
-        throw new https_1.HttpsError("invalid-argument", "Code is required");
-    }
-    if (!displayName || typeof displayName !== "string") {
-        throw new https_1.HttpsError("invalid-argument", "Display name is required");
-    }
+    (0, validation_js_1.validateGroupCode)(code);
+    (0, validation_js_1.validateDisplayName)(displayName);
     if (!role || !Object.values(index_js_1.MemberRole).includes(role)) {
         throw new https_1.HttpsError("invalid-argument", "Valid role is required (alerter or responder)");
     }
@@ -31,6 +29,8 @@ exports.joinGroup = (0, https_1.onCall)({ region: "europe-west1" }, async (reque
     const groupData = groupDoc.data();
     const groupId = groupData.groupId;
     const groupName = groupData.name;
+    await (0, plan_limits_js_1.checkGroupNotBlocked)(db, groupId);
+    await (0, plan_limits_js_1.validatePlanLimit)(db, groupId, "members");
     const compositeKey = `${groupId}_${request.auth.uid}`;
     const memberRef = db.collection("groupMembers").doc(compositeKey);
     const memberDoc = await memberRef.get();

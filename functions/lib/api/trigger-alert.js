@@ -4,6 +4,7 @@ exports.triggerAlert = void 0;
 const https_1 = require("firebase-functions/v2/https");
 const firestore_1 = require("firebase-admin/firestore");
 const bcryptjs_1 = require("bcryptjs");
+const v2_1 = require("firebase-functions/v2");
 const index_js_1 = require("../models/index.js");
 const DEBOUNCE_SECONDS = 30;
 const ALERT_EXPIRY_MS = 60_000;
@@ -29,18 +30,35 @@ exports.triggerAlert = (0, https_1.onRequest)({ region: "europe-west1" }, async 
     }
     // Find matching key by comparing bcrypt hash
     let groupId = null;
+    let matchedKeyId = null;
     for (const doc of keysSnapshot.docs) {
         const data = doc.data();
         const match = await (0, bcryptjs_1.compare)(apiKey, data.keyHash);
         if (match) {
+            // Check key expiration (OWASP A07)
+            const expiresAt = data.expiresAt;
+            if (expiresAt && expiresAt.toMillis() < Date.now()) {
+                v2_1.logger.warn("API key expired", { keyId: doc.id, groupId: data.groupId });
+                res.status(401).json({ error: "API key expired" });
+                return;
+            }
             groupId = data.groupId;
+            matchedKeyId = doc.id;
             break;
         }
     }
-    if (!groupId) {
+    if (!groupId || !matchedKeyId) {
+        v2_1.logger.warn("API key authentication failed", {
+            ip: req.ip,
+            reason: "invalid_key",
+        });
         res.status(401).json({ error: "Invalid API key" });
         return;
     }
+    // Audit: update lastUsedAt (OWASP A09)
+    db.collection("apiKeys").doc(matchedKeyId).update({
+        lastUsedAt: firestore_1.FieldValue.serverTimestamp(),
+    }).catch((err) => v2_1.logger.error("Failed to update lastUsedAt", { keyId: matchedKeyId, error: err }));
     // Transaction: debounce check + create alert
     try {
         const alertId = await db.runTransaction(async (transaction) => {
@@ -73,9 +91,11 @@ exports.triggerAlert = (0, https_1.onRequest)({ region: "europe-west1" }, async 
             res.status(429).json({ error: "Alert already active, please wait" });
             return;
         }
+        v2_1.logger.info("Alert triggered via API key", { keyId: matchedKeyId, groupId, alertId });
         res.status(200).json({ alertId });
     }
     catch (error) {
+        v2_1.logger.error("Error creating alert via API", { keyId: matchedKeyId, groupId, error });
         res.status(500).json({ error: "Internal server error" });
     }
 });

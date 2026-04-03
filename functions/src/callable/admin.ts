@@ -171,3 +171,122 @@ export const adminUpdateGroup = onCall(
     return { success: true, groupId, updates };
   }
 );
+
+export const adminCheckSetup = onCall(
+  { region: "europe-west1" },
+  async (request) => {
+    requireAdmin(request);
+    const db = getFirestore();
+    const plansSnap = await db.collection("plans").limit(1).get();
+    return { setupComplete: !plansSnap.empty };
+  }
+);
+
+export const adminCreatePlan = onCall(
+  { region: "europe-west1" },
+  async (request) => {
+    requireAdmin(request);
+
+    const { planId, name, priceMonthly, order, limits } = request.data as {
+      planId?: string;
+      name?: string;
+      priceMonthly?: number;
+      order?: number;
+      limits?: {
+        maxGroups?: number;
+        maxMembers?: number;
+        maxBeacons?: number;
+        supervisionPanel?: boolean;
+        adminPanel?: boolean;
+      };
+    };
+
+    if (!planId || typeof planId !== "string") {
+      throw new HttpsError("invalid-argument", "planId is required");
+    }
+    if (!name || typeof name !== "string") {
+      throw new HttpsError("invalid-argument", "name is required");
+    }
+    if (priceMonthly === undefined || typeof priceMonthly !== "number") {
+      throw new HttpsError("invalid-argument", "priceMonthly is required (number)");
+    }
+    if (!limits || typeof limits.maxMembers !== "number" || typeof limits.maxGroups !== "number" || typeof limits.maxBeacons !== "number") {
+      throw new HttpsError("invalid-argument", "limits with maxGroups, maxMembers, maxBeacons required");
+    }
+
+    const db = getFirestore();
+    const existing = await db.collection("plans").doc(planId).get();
+    if (existing.exists) {
+      throw new HttpsError("already-exists", `Plan "${planId}" already exists`);
+    }
+
+    const planData = {
+      planId,
+      name,
+      priceMonthly,
+      order: order ?? 0,
+      active: true,
+      limits: {
+        maxGroups: limits.maxGroups,
+        maxMembers: limits.maxMembers,
+        maxBeacons: limits.maxBeacons,
+        supervisionPanel: limits.supervisionPanel ?? false,
+        adminPanel: limits.adminPanel ?? false,
+      },
+    };
+
+    await db.collection("plans").doc(planId).set(planData);
+    return { success: true, plan: planData };
+  }
+);
+
+export const adminUpdatePlan = onCall(
+  { region: "europe-west1" },
+  async (request) => {
+    requireAdmin(request);
+
+    const { planId, ...updates } = request.data as {
+      planId?: string;
+      name?: string;
+      priceMonthly?: number;
+      order?: number;
+      active?: boolean;
+      limits?: {
+        maxGroups?: number;
+        maxMembers?: number;
+        maxBeacons?: number;
+        supervisionPanel?: boolean;
+        adminPanel?: boolean;
+      };
+    };
+
+    if (!planId) {
+      throw new HttpsError("invalid-argument", "planId is required");
+    }
+
+    const db = getFirestore();
+    const planRef = db.collection("plans").doc(planId);
+    const planDoc = await planRef.get();
+
+    if (!planDoc.exists) {
+      throw new HttpsError("not-found", "Plan not found");
+    }
+
+    const updateData: Record<string, unknown> = {};
+    if (updates.name !== undefined) updateData.name = updates.name;
+    if (updates.priceMonthly !== undefined) updateData.priceMonthly = updates.priceMonthly;
+    if (updates.order !== undefined) updateData.order = updates.order;
+    if (updates.active !== undefined) updateData.active = updates.active;
+    if (updates.limits) {
+      const current = planDoc.data()?.limits || {};
+      updateData.limits = { ...current, ...updates.limits };
+    }
+
+    if (Object.keys(updateData).length === 0) {
+      throw new HttpsError("invalid-argument", "No updates provided");
+    }
+
+    await planRef.update(updateData);
+    return { success: true, planId };
+  }
+);
