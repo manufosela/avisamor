@@ -1,7 +1,7 @@
 import { LitElement, html, css, nothing } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import { auth, functions, googleProvider } from '../lib/firebase.js';
-import { signInWithRedirect, signOut, onAuthStateChanged, type User } from 'firebase/auth';
+import { signInWithRedirect, getRedirectResult, signOut, onAuthStateChanged, type User } from 'firebase/auth';
 import { httpsCallable } from 'firebase/functions';
 import './avisamor-setup.js';
 import './avisamor-alerter.js';
@@ -140,6 +140,7 @@ export class AvisamorApp extends LitElement {
 
   connectedCallback(): void {
     super.connectedCallback();
+    getRedirectResult(auth).catch(() => {});
     onAuthStateChanged(auth, async (user) => {
       if (user) {
         this._user = user;
