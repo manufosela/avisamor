@@ -102,6 +102,18 @@ export class AvisamorApp extends LitElement {
       border: none; border-radius: 12px; cursor: pointer;
     }
 
+    .app-bar {
+      display: flex; align-items: center; gap: 12px;
+      padding: 8px 16px; background: #1f2937; color: #fff; font-size: 0.85rem;
+    }
+    .app-bar-title { font-weight: 600; }
+    .app-bar-code { font-family: monospace; opacity: 0.7; font-size: 0.8rem; }
+    .app-bar-actions { margin-left: auto; display: flex; gap: 8px; }
+    .app-bar-btn {
+      background: rgba(255,255,255,0.15); color: #fff; border: none;
+      padding: 4px 10px; border-radius: 4px; cursor: pointer; font-size: 0.8rem;
+    }
+
     .error { color: #dc2626; margin: 12px 0; font-size: 0.95rem; }
 
     @media (prefers-color-scheme: dark) {
@@ -185,6 +197,13 @@ export class AvisamorApp extends LitElement {
     this._loadGroups();
   }
 
+  private _nav(): void {
+    this._activeGroupId = '';
+    this._activeRole = '';
+    this._appState = 'groups';
+    this._loadGroups();
+  }
+
   private _showSetup(mode: string = ''): void {
     this._setupMode = mode;
     this._appState = 'setup';
@@ -205,6 +224,16 @@ export class AvisamorApp extends LitElement {
       ${this._appState === 'groups' ? this._renderGroups() : nothing}
       ${this._appState === 'setup' ? html`
         <avisamor-setup .initialMode=${this._setupMode} @group-joined=${this._onGroupJoined} @back=${() => this._loadGroups()}></avisamor-setup>
+      ` : nothing}
+      ${this._appState === 'alerter' ? html`
+        <div class="app-bar">
+          <span class="app-bar-title">${this._activeGroupName}</span>
+          <span class="app-bar-code">${this._activeGroupCode}</span>
+          <div class="app-bar-actions">
+            ${this._groups.length > 1 ? html`<button class="app-bar-btn" @click=${() => this._nav()}>Mis grupos</button>` : nothing}
+            <button class="app-bar-btn" @click=${this._logout}>Salir</button>
+          </div>
+        </div>
       ` : nothing}
       ${this._appState === 'alerter' && this._activeRole === 'alerter' ? html`
         <avisamor-alerter .groupId=${this._activeGroupId}></avisamor-alerter>
