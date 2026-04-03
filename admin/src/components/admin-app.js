@@ -1,32 +1,20 @@
 import { LitElement, html, css, nothing } from 'lit';
-import { customElement, state } from 'lit/decorators.js';
 import { auth, functions } from '../lib/firebase.js';
 import { signInWithEmailAndPassword, onAuthStateChanged, signOut } from 'firebase/auth';
 import { httpsCallable } from 'firebase/functions';
 
-interface DashboardData {
-  totalGroups: number;
-  totalMembers: number;
-  totalBeacons: number;
-  alertsToday: number;
-  alertsWeek: number;
-  totalAlerts: number;
-}
-
-interface GroupData {
-  groupId: string;
-  name: string;
-  planId: string;
-  blocked: boolean;
-  membersCount: number;
-  beaconsCount: number;
-  lastAlertAt: unknown;
-}
-
-type View = 'login' | 'dashboard' | 'groups';
-
-@customElement('admin-app')
 export class AdminApp extends LitElement {
+  static properties = {
+    _view: { state: true },
+    _email: { state: true },
+    _password: { state: true },
+    _error: { state: true },
+    _loading: { state: true },
+    _dashboard: { state: true },
+    _groups: { state: true },
+    _isAdmin: { state: true },
+  };
+
   static styles = css`
     :host { display: block; min-height: 100dvh; }
     .container { max-width: 1000px; margin: 0 auto; padding: 24px 16px; }
@@ -92,14 +80,17 @@ export class AdminApp extends LitElement {
     .loading { text-align: center; padding: 40px; color: #6b7280; }
   `;
 
-  @state() private _view: View = 'login';
-  @state() private _email = '';
-  @state() private _password = '';
-  @state() private _error = '';
-  @state() private _loading = false;
-  @state() private _dashboard: DashboardData | null = null;
-  @state() private _groups: GroupData[] = [];
-  @state() private _isAdmin = false;
+  constructor() {
+    super();
+    this._view = 'login';
+    this._email = '';
+    this._password = '';
+    this._error = '';
+    this._loading = false;
+    this._dashboard = null;
+    this._groups = [];
+    this._isAdmin = false;
+  }
 
   connectedCallback() {
     super.connectedCallback();
@@ -118,18 +109,18 @@ export class AdminApp extends LitElement {
     });
   }
 
-  private async _login() {
+  async _login() {
     this._error = '';
     this._loading = true;
     try {
       await signInWithEmailAndPassword(auth, this._email, this._password);
-    } catch (e: unknown) {
-      this._error = `Error de login: ${(e as Error).message}`;
+    } catch (e) {
+      this._error = `Error de login: ${e.message}`;
     }
     this._loading = false;
   }
 
-  private async _logout() {
+  async _logout() {
     await signOut(auth);
     this._isAdmin = false;
     this._view = 'login';
@@ -137,41 +128,41 @@ export class AdminApp extends LitElement {
     this._groups = [];
   }
 
-  private async _loadDashboard() {
+  async _loadDashboard() {
     this._loading = true;
     try {
       const fn = httpsCallable(functions, 'adminGetDashboard');
       const result = await fn();
-      this._dashboard = result.data as DashboardData;
-    } catch (e: unknown) {
-      this._error = `Error: ${(e as Error).message}`;
+      this._dashboard = result.data;
+    } catch (e) {
+      this._error = `Error: ${e.message}`;
     }
     this._loading = false;
   }
 
-  private async _loadGroups() {
+  async _loadGroups() {
     this._loading = true;
     try {
       const fn = httpsCallable(functions, 'adminListGroups');
       const result = await fn();
-      this._groups = (result.data as { groups: GroupData[] }).groups;
-    } catch (e: unknown) {
-      this._error = `Error: ${(e as Error).message}`;
+      this._groups = result.data.groups;
+    } catch (e) {
+      this._error = `Error: ${e.message}`;
     }
     this._loading = false;
   }
 
-  private async _updateGroup(groupId: string, updates: Record<string, unknown>) {
+  async _updateGroup(groupId, updates) {
     try {
       const fn = httpsCallable(functions, 'adminUpdateGroup');
       await fn({ groupId, ...updates });
       this._loadGroups();
-    } catch (e: unknown) {
-      this._error = `Error: ${(e as Error).message}`;
+    } catch (e) {
+      this._error = `Error: ${e.message}`;
     }
   }
 
-  private _navigateTo(view: View) {
+  _navigateTo(view) {
     this._view = view;
     this._error = '';
     if (view === 'dashboard') this._loadDashboard();
@@ -198,19 +189,19 @@ export class AdminApp extends LitElement {
     `;
   }
 
-  private _renderLogin() {
+  _renderLogin() {
     return html`
       <div class="login-form">
         <h2>Avisamor Admin</h2>
         ${this._error ? html`<p class="error">${this._error}</p>` : nothing}
-        <input type="email" placeholder="Email" .value=${this._email} @input=${(e: Event) => this._email = (e.target as HTMLInputElement).value} />
-        <input type="password" placeholder="Contraseña" .value=${this._password} @input=${(e: Event) => this._password = (e.target as HTMLInputElement).value} @keyup=${(e: KeyboardEvent) => e.key === 'Enter' && this._login()} />
+        <input type="email" placeholder="Email" .value=${this._email} @input=${(e) => this._email = e.target.value} />
+        <input type="password" placeholder="Contraseña" .value=${this._password} @input=${(e) => this._password = e.target.value} @keyup=${(e) => e.key === 'Enter' && this._login()} />
         <button @click=${this._login} ?disabled=${this._loading}>${this._loading ? 'Entrando...' : 'Entrar'}</button>
       </div>
     `;
   }
 
-  private _renderDashboard() {
+  _renderDashboard() {
     if (!this._dashboard) return nothing;
     const d = this._dashboard;
     return html`
@@ -226,7 +217,7 @@ export class AdminApp extends LitElement {
     `;
   }
 
-  private _renderGroups() {
+  _renderGroups() {
     return html`
       <h2>Grupos (${this._groups.length})</h2>
       <table>
@@ -257,8 +248,4 @@ export class AdminApp extends LitElement {
   }
 }
 
-declare global {
-  interface HTMLElementTagNameMap {
-    'admin-app': AdminApp;
-  }
-}
+customElements.define('admin-app', AdminApp);
