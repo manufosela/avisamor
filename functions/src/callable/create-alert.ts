@@ -49,11 +49,15 @@ export const createAlert = onCall(
         throw new HttpsError("resource-exhausted", "Alert already active, please wait");
       }
 
+      const memberSnap = await db.collection("groupMembers").doc(`${groupId}_${uid}`).get();
+      const alerterName = memberSnap.exists ? memberSnap.data()?.displayName || "Alguien" : "Alguien";
+
       const alertRef = db.collection("alerts").doc();
       transaction.set(alertRef, {
         alertId: alertRef.id,
         groupId,
         triggeredBy: uid,
+        alerterName,
         triggerSource: source === "android" ? TriggerSource.ANDROID : TriggerSource.PWA,
         status: AlertStatus.ACTIVE,
         createdAt: FieldValue.serverTimestamp(),

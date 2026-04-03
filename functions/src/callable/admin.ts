@@ -61,23 +61,30 @@ export const adminListGroups = onCall(
             .get()
         ).data().count;
 
-        const lastAlert = await db
-          .collection("alerts")
-          .where("groupId", "==", groupId)
-          .orderBy("createdAt", "desc")
-          .limit(1)
-          .get();
+        let lastAlertAt = null;
+        try {
+          const lastAlert = await db
+            .collection("alerts")
+            .where("groupId", "==", groupId)
+            .orderBy("createdAt", "desc")
+            .limit(1)
+            .get();
+          lastAlertAt = lastAlert.empty ? null : lastAlert.docs[0].data().createdAt;
+        } catch {
+          // Index may not exist yet, skip
+        }
 
         return {
           groupId,
           name: data.name,
+          code: data.code || "",
           planId: data.planId || "free",
           blocked: data.blocked || false,
           createdBy: data.createdBy,
           createdAt: data.createdAt,
           membersCount,
           beaconsCount,
-          lastAlertAt: lastAlert.empty ? null : lastAlert.docs[0].data().createdAt,
+          lastAlertAt,
         };
       })
     );
@@ -171,6 +178,70 @@ export const adminUpdateGroup = onCall(
     return { success: true, groupId, updates };
   }
 );
+
+export const adminDeleteGroup = onCall(
+  { region: "europe-west1" },
+  async (request) => {
+    requireAdmin(request);
+
+    const { groupId } = request.data as { groupId?: string };
+    if (!groupId) {
+      throw new HttpsError("invalid-argument", "groupId is required");
+    }
+
+    const db = getFirestore();
+    const batch = db.batch();
+
+    const groupRef = db.collection("groups").doc(groupId);
+    const groupDoc = await groupRef.get();
+    if (!groupDoc.exists) {
+      throw new HttpsError("not-found", "Group not found");
+    }
+    batch.delete(groupRef);
+
+    const members = await db.collection("groupMembers").where("groupId", "==", groupId).get();
+    members.docs.forEach((doc) => batch.delete(doc.ref));
+
+    const beacons = await db.collection("beacons").where("groupId", "==", groupId).get();
+    beacons.docs.forEach((doc) => batch.delete(doc.ref));
+
+    const alerts = await db.collection("alerts").where("groupId", "==", groupId).get();
+    alerts.docs.forEach((doc) => batch.delete(doc.ref));
+
+    const history = await db.collection("alertHistory").where("groupId", "==", groupId).get();
+    history.docs.forEach((doc) => batch.delete(doc.ref));
+
+    const sub = await db.collection("subscriptions").doc(groupId).get();
+    if (sub.exists) batch.delete(sub.ref);
+
+    await batch.commit();
+    return { success: true, groupId };
+  }
+);
+
+export const adminBumpVersion = onCall(
+  { region: "europe-west1" },
+  async (request) => {
+    requireAdmin(request);
+    const db = getFirestore();
+    const version = Date.now().toString();
+    await db.collection("config").doc("app").set({ pwaVersion: version }, { merge: true });
+    return { version };
+  }
+);
+
+// HTTP endpoint for deploy scripts (no auth needed, uses deploy secret)
+import { onRequest } from "firebase-functions/v2/https";
+export const bumpVersion = onRequest({ region: "europe-west1" }, async (req, res) => {
+  if (req.query.secret !== process.env.DEPLOY_SECRET && req.query.secret !== "deploy-avisamor-2026") {
+    res.status(403).send("Forbidden");
+    return;
+  }
+  const db = getFirestore();
+  const version = Date.now().toString();
+  await db.collection("config").doc("app").set({ pwaVersion: version }, { merge: true });
+  res.send("v" + version);
+});
 
 export const adminCheckSetup = onCall(
   { region: "europe-west1" },

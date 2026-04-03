@@ -8,6 +8,9 @@ echo "==> Building PWA..."
 cd "$ROOT_DIR/pwa" && npm run build
 
 echo "==> Deploying hosting..."
-cd "$ROOT_DIR" && firebase deploy --only hosting --project avisador-avisamor
+cd "$ROOT_DIR" && firebase deploy --only hosting:pwa --project avisador-avisamor
 
-echo "==> Hosting deployed successfully."
+echo "==> Bumping PWA version..."
+curl -s "https://europe-west1-avisador-avisamor.cloudfunctions.net/bumpVersion?secret=deploy-avisamor-2026" && echo "" || echo "Version bump failed"
+
+echo "==> PWA deployed successfully."

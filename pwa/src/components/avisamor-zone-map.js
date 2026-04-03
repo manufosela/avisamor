@@ -1,23 +1,14 @@
 import { LitElement, html, css, nothing } from 'lit';
-import { customElement, property, state } from 'lit/decorators.js';
 import { db } from '../lib/firebase.js';
 import { collection, query, where, onSnapshot } from 'firebase/firestore';
-import type { Unsubscribe } from 'firebase/firestore';
 
-interface ZoneBeacon {
-  beaconId: string;
-  zoneName: string;
-  floor: number;
-}
-
-interface MemberLocation {
-  displayName: string;
-  currentZone: string | null;
-  role: string;
-}
-
-@customElement('avisamor-zone-map')
 export class AvisamorZoneMap extends LitElement {
+  static properties = {
+    groupId: { type: String },
+    _beacons: { state: true },
+    _members: { state: true },
+  };
+
   static styles = css`
     :host {
       display: block;
@@ -111,32 +102,33 @@ export class AvisamorZoneMap extends LitElement {
     }
   `;
 
-  @property({ type: String }) groupId = '';
+  constructor() {
+    super();
+    this.groupId = '';
+    this._beacons = [];
+    this._members = [];
+    this._unsubBeacons = null;
+    this._unsubMembers = null;
+  }
 
-  @state() private _beacons: ZoneBeacon[] = [];
-  @state() private _members: MemberLocation[] = [];
-
-  private _unsubBeacons: Unsubscribe | null = null;
-  private _unsubMembers: Unsubscribe | null = null;
-
-  connectedCallback(): void {
+  connectedCallback() {
     super.connectedCallback();
     if (this.groupId) this._subscribe();
   }
 
-  disconnectedCallback(): void {
+  disconnectedCallback() {
     super.disconnectedCallback();
     this._cleanup();
   }
 
-  updated(changedProps: Map<string, unknown>): void {
+  updated(changedProps) {
     if (changedProps.has('groupId') && this.groupId) {
       this._cleanup();
       this._subscribe();
     }
   }
 
-  private _subscribe(): void {
+  _subscribe() {
     // Listen to beacons
     const beaconsRef = collection(db, 'beacons');
     const beaconsQuery = query(
@@ -175,7 +167,7 @@ export class AvisamorZoneMap extends LitElement {
     });
   }
 
-  private _cleanup(): void {
+  _cleanup() {
     this._unsubBeacons?.();
     this._unsubBeacons = null;
     this._unsubMembers?.();
@@ -245,8 +237,4 @@ export class AvisamorZoneMap extends LitElement {
   }
 }
 
-declare global {
-  interface HTMLElementTagNameMap {
-    'avisamor-zone-map': AvisamorZoneMap;
-  }
-}
+customElements.define('avisamor-zone-map', AvisamorZoneMap);

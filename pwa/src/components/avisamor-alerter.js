@@ -1,20 +1,33 @@
 import { LitElement, html, css } from 'lit';
-import { customElement, property, state } from 'lit/decorators.js';
 import { app } from '../lib/firebase.js';
 import { getFunctions, httpsCallable } from 'firebase/functions';
 import './avisamor-alert-status.js';
 import './avisamor-zone-map.js';
 
-type AlerterState = 'idle' | 'sending' | 'sent' | 'error';
-
-@customElement('avisamor-alerter')
 export class AvisamorAlerter extends LitElement {
+  static properties = {
+    groupId: { type: String },
+    groupName: { type: String },
+    groupCode: { type: String },
+    _state: { state: true },
+    _errorMsg: { state: true },
+  };
+
   static styles = css`
     :host {
       display: flex;
       flex-direction: column;
       min-height: 100dvh;
       font-family: system-ui, -apple-system, sans-serif;
+    }
+
+    .alerter-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 10px 16px; background: #dc2626; color: #fff; font-size: 0.9rem;
+    }
+    .header-btn {
+      background: rgba(255,255,255,0.2); color: #fff; border: none;
+      padding: 6px 10px; border-radius: 6px; cursor: pointer; font-size: 0.8rem;
     }
 
     .button-area {
@@ -114,20 +127,23 @@ export class AvisamorAlerter extends LitElement {
     }
   `;
 
-  @property({ type: String }) groupId = '';
+  constructor() {
+    super();
+    this.groupId = '';
+    this.groupName = '';
+    this.groupCode = '';
+    this._state = 'idle';
+    this._errorMsg = '';
+    this._functions = getFunctions(app, 'europe-west1');
+    this._sentTimer = undefined;
+  }
 
-  @state() private _state: AlerterState = 'idle';
-  @state() private _errorMsg = '';
-
-  private _functions = getFunctions(app, 'europe-west1');
-  private _sentTimer?: ReturnType<typeof setTimeout>;
-
-  disconnectedCallback(): void {
+  disconnectedCallback() {
     super.disconnectedCallback();
     if (this._sentTimer) clearTimeout(this._sentTimer);
   }
 
-  private async _sendAlert(): Promise<void> {
+  async _sendAlert() {
     if (this._state === 'sending' || this._state === 'sent') return;
 
     this._state = 'sending';
@@ -141,7 +157,7 @@ export class AvisamorAlerter extends LitElement {
       this._sentTimer = setTimeout(() => {
         this._state = 'idle';
       }, 3000);
-    } catch (err: unknown) {
+    } catch (err) {
       this._state = 'error';
       if (err instanceof Error) {
         if (err.message.includes('resource-exhausted') || err.message.includes('already active')) {
@@ -160,7 +176,7 @@ export class AvisamorAlerter extends LitElement {
     }
   }
 
-  private _getButtonText(): string {
+  _getButtonText() {
     switch (this._state) {
       case 'idle': return 'PULSA PARA PEDIR AYUDA';
       case 'sending': return 'ENVIANDO...';
@@ -171,6 +187,20 @@ export class AvisamorAlerter extends LitElement {
 
   render() {
     return html`
+      <div class="alerter-header">
+        <div>
+          <strong>${this.groupName || 'AvisaBlue'}</strong>
+          <span style="font-size:0.75rem; opacity:0.7; margin-left:8px;">${this.groupCode}</span>
+        </div>
+        <button class="header-btn" @click=${() => this.dispatchEvent(new CustomEvent('logout', { bubbles: true, composed: true }))}>Salir</button>
+      </div>
+      <div class="status-area">
+        ${this._errorMsg
+          ? html`<div class="error-message" role="alert">${this._errorMsg}</div>`
+          : ''}
+        <avisamor-alert-status .groupId=${this.groupId}></avisamor-alert-status>
+      </div>
+
       <div class="button-area">
         <button
           class="alert-button ${this._state}"
@@ -181,20 +211,8 @@ export class AvisamorAlerter extends LitElement {
           ${this._getButtonText()}
         </button>
       </div>
-
-      <div class="status-area">
-        ${this._errorMsg
-          ? html`<div class="error-message" role="alert">${this._errorMsg}</div>`
-          : ''}
-        <avisamor-alert-status .groupId=${this.groupId}></avisamor-alert-status>
-        <avisamor-zone-map .groupId=${this.groupId}></avisamor-zone-map>
-      </div>
     `;
   }
 }
 
-declare global {
-  interface HTMLElementTagNameMap {
-    'avisamor-alerter': AvisamorAlerter;
-  }
-}
+customElements.define('avisamor-alerter', AvisamorAlerter);

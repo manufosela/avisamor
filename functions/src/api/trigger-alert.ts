@@ -85,11 +85,19 @@ export const triggerAlert = onRequest(
           return null; // debounce hit
         }
 
+        const alerterSnap = await db.collection("groupMembers")
+          .where("groupId", "==", groupId)
+          .where("role", "==", "alerter")
+          .limit(1)
+          .get();
+        const alerterName = alerterSnap.empty ? "Botón Flic" : alerterSnap.docs[0].data().displayName || "Botón Flic";
+
         const alertRef = db.collection("alerts").doc();
         transaction.set(alertRef, {
           alertId: alertRef.id,
           groupId,
           triggeredBy: "flic-button",
+          alerterName,
           triggerSource: TriggerSource.FLIC,
           status: AlertStatus.ACTIVE,
           createdAt: FieldValue.serverTimestamp(),
