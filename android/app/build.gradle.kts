@@ -8,7 +8,7 @@ plugins {
 
 android {
     namespace = "com.manufosela.avisamor"
-    compileSdk = 34
+    compileSdk = 35
 
     signingConfigs {
         create("release") {
@@ -22,8 +22,8 @@ android {
     defaultConfig {
         applicationId = "com.manufosela.avisamor"
         minSdk = 26
-        targetSdk = 34
-        versionCode = 2
+        targetSdk = 35
+        versionCode = 3
         versionName = "2.0.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
