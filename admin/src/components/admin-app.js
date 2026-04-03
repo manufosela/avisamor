@@ -242,6 +242,17 @@ export class AdminApp extends LitElement {
     }
   }
 
+  async _deleteGroup(groupId, groupName) {
+    if (!confirm(`¿Eliminar el grupo "${groupName}" y todos sus datos? Esta acción no se puede deshacer.`)) return;
+    try {
+      const fn = httpsCallable(functions, 'adminDeleteGroup');
+      await fn({ groupId });
+      this._loadGroups();
+    } catch (e) {
+      this._error = `Error: ${e.message}`;
+    }
+  }
+
   _navigateTo(view) {
     this._view = view;
     this._error = '';
@@ -385,12 +396,13 @@ export class AdminApp extends LitElement {
       <h2>Grupos (${this._groups.length})</h2>
       <table>
         <thead>
-          <tr><th>Nombre</th><th>Plan</th><th>Miembros</th><th>Beacons</th><th>Estado</th><th>Acciones</th></tr>
+          <tr><th>Nombre</th><th>Código</th><th>Plan</th><th>Miembros</th><th>Beacons</th><th>Estado</th><th>Acciones</th></tr>
         </thead>
         <tbody>
           ${this._groups.map(g => html`
             <tr>
               <td>${g.name}</td>
+              <td style="font-family:monospace;font-size:0.85rem;">${g.code || '—'}</td>
               <td><span class="badge badge-${g.planId}">${g.planId}</span></td>
               <td>${g.membersCount}</td>
               <td>${g.beaconsCount}</td>
@@ -401,6 +413,7 @@ export class AdminApp extends LitElement {
                   : html`<button @click=${() => this._updateGroup(g.groupId, { blocked: true, blockedReason: 'Bloqueado por admin' })}>Bloquear</button>`
                 }
                 ${this._plans.map(p => p.planId !== g.planId ? html`<button @click=${() => this._updateGroup(g.groupId, { planId: p.planId })}>→ ${p.name}</button>` : nothing)}
+                <button style="color:#dc2626;" @click=${() => this._deleteGroup(g.groupId, g.name)}>Eliminar</button>
               </td>
             </tr>
           `)}

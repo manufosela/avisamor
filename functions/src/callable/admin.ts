@@ -77,6 +77,7 @@ export const adminListGroups = onCall(
         return {
           groupId,
           name: data.name,
+          code: data.code || "",
           planId: data.planId || "free",
           blocked: data.blocked || false,
           createdBy: data.createdBy,
@@ -175,6 +176,46 @@ export const adminUpdateGroup = onCall(
     await groupRef.update(updates);
 
     return { success: true, groupId, updates };
+  }
+);
+
+export const adminDeleteGroup = onCall(
+  { region: "europe-west1" },
+  async (request) => {
+    requireAdmin(request);
+
+    const { groupId } = request.data as { groupId?: string };
+    if (!groupId) {
+      throw new HttpsError("invalid-argument", "groupId is required");
+    }
+
+    const db = getFirestore();
+    const batch = db.batch();
+
+    const groupRef = db.collection("groups").doc(groupId);
+    const groupDoc = await groupRef.get();
+    if (!groupDoc.exists) {
+      throw new HttpsError("not-found", "Group not found");
+    }
+    batch.delete(groupRef);
+
+    const members = await db.collection("groupMembers").where("groupId", "==", groupId).get();
+    members.docs.forEach((doc) => batch.delete(doc.ref));
+
+    const beacons = await db.collection("beacons").where("groupId", "==", groupId).get();
+    beacons.docs.forEach((doc) => batch.delete(doc.ref));
+
+    const alerts = await db.collection("alerts").where("groupId", "==", groupId).get();
+    alerts.docs.forEach((doc) => batch.delete(doc.ref));
+
+    const history = await db.collection("alertHistory").where("groupId", "==", groupId).get();
+    history.docs.forEach((doc) => batch.delete(doc.ref));
+
+    const sub = await db.collection("subscriptions").doc(groupId).get();
+    if (sub.exists) batch.delete(sub.ref);
+
+    await batch.commit();
+    return { success: true, groupId };
   }
 );
 
