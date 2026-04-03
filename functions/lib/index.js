@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.expireAlerts = exports.onAlertUpdated = exports.onAlertCreated = exports.adminUpdatePlan = exports.adminCreatePlan = exports.adminCheckSetup = exports.adminUpdateGroup = exports.adminGetDashboard = exports.adminListGroups = exports.setAdminClaim = exports.deleteMyData = exports.getPlans = exports.updateMemberZone = exports.listBeacons = exports.registerBeacon = exports.getHistory = exports.cancelAlert = exports.resolveAlert = exports.acceptAlert = exports.createAlert = exports.triggerAlert = exports.registerFcmToken = exports.joinGroup = exports.createGroup = void 0;
+exports.expireAlerts = exports.onAlertUpdated = exports.onAlertCreated = exports.adminDeleteUser = exports.adminUpdateUser = exports.adminListUsers = exports.adminDeleteBeacon = exports.adminDeleteMember = exports.adminUpdateMember = exports.adminCreateGroupFromAdmin = exports.adminGetGroup = exports.bumpVersion = exports.adminBumpVersion = exports.adminUpdatePlan = exports.adminCreatePlan = exports.adminCheckSetup = exports.adminDeleteGroup = exports.adminUpdateGroup = exports.adminGetDashboard = exports.adminListGroups = exports.setAdminClaim = exports.deleteMyData = exports.getPlans = exports.updateMemberZone = exports.listBeacons = exports.registerBeacon = exports.myGroups = exports.getHistory = exports.cancelAlert = exports.resolveAlert = exports.acceptAlert = exports.createAlert = exports.triggerAlert = exports.registerFcmToken = exports.joinGroup = exports.createGroup = void 0;
 const app_1 = require("firebase-admin/app");
 const v2_1 = require("firebase-functions/v2");
 if ((0, app_1.getApps)().length === 0) {
@@ -24,6 +24,8 @@ Object.defineProperty(exports, "resolveAlert", { enumerable: true, get: function
 Object.defineProperty(exports, "cancelAlert", { enumerable: true, get: function () { return resolve_cancel_alert_js_1.cancelAlert; } });
 var get_history_js_1 = require("./callable/get-history.js");
 Object.defineProperty(exports, "getHistory", { enumerable: true, get: function () { return get_history_js_1.getHistory; } });
+var my_groups_js_1 = require("./callable/my-groups.js");
+Object.defineProperty(exports, "myGroups", { enumerable: true, get: function () { return my_groups_js_1.myGroups; } });
 var register_beacon_js_1 = require("./callable/register-beacon.js");
 Object.defineProperty(exports, "registerBeacon", { enumerable: true, get: function () { return register_beacon_js_1.registerBeacon; } });
 Object.defineProperty(exports, "listBeacons", { enumerable: true, get: function () { return register_beacon_js_1.listBeacons; } });
@@ -38,9 +40,22 @@ Object.defineProperty(exports, "setAdminClaim", { enumerable: true, get: functio
 Object.defineProperty(exports, "adminListGroups", { enumerable: true, get: function () { return admin_js_1.adminListGroups; } });
 Object.defineProperty(exports, "adminGetDashboard", { enumerable: true, get: function () { return admin_js_1.adminGetDashboard; } });
 Object.defineProperty(exports, "adminUpdateGroup", { enumerable: true, get: function () { return admin_js_1.adminUpdateGroup; } });
+Object.defineProperty(exports, "adminDeleteGroup", { enumerable: true, get: function () { return admin_js_1.adminDeleteGroup; } });
 Object.defineProperty(exports, "adminCheckSetup", { enumerable: true, get: function () { return admin_js_1.adminCheckSetup; } });
 Object.defineProperty(exports, "adminCreatePlan", { enumerable: true, get: function () { return admin_js_1.adminCreatePlan; } });
 Object.defineProperty(exports, "adminUpdatePlan", { enumerable: true, get: function () { return admin_js_1.adminUpdatePlan; } });
+Object.defineProperty(exports, "adminBumpVersion", { enumerable: true, get: function () { return admin_js_1.adminBumpVersion; } });
+Object.defineProperty(exports, "bumpVersion", { enumerable: true, get: function () { return admin_js_1.bumpVersion; } });
+var admin_groups_js_1 = require("./callable/admin-groups.js");
+Object.defineProperty(exports, "adminGetGroup", { enumerable: true, get: function () { return admin_groups_js_1.adminGetGroup; } });
+Object.defineProperty(exports, "adminCreateGroupFromAdmin", { enumerable: true, get: function () { return admin_groups_js_1.adminCreateGroupFromAdmin; } });
+Object.defineProperty(exports, "adminUpdateMember", { enumerable: true, get: function () { return admin_groups_js_1.adminUpdateMember; } });
+Object.defineProperty(exports, "adminDeleteMember", { enumerable: true, get: function () { return admin_groups_js_1.adminDeleteMember; } });
+Object.defineProperty(exports, "adminDeleteBeacon", { enumerable: true, get: function () { return admin_groups_js_1.adminDeleteBeacon; } });
+var admin_users_js_1 = require("./callable/admin-users.js");
+Object.defineProperty(exports, "adminListUsers", { enumerable: true, get: function () { return admin_users_js_1.adminListUsers; } });
+Object.defineProperty(exports, "adminUpdateUser", { enumerable: true, get: function () { return admin_users_js_1.adminUpdateUser; } });
+Object.defineProperty(exports, "adminDeleteUser", { enumerable: true, get: function () { return admin_users_js_1.adminDeleteUser; } });
 var on_alert_created_js_1 = require("./triggers/on-alert-created.js");
 Object.defineProperty(exports, "onAlertCreated", { enumerable: true, get: function () { return on_alert_created_js_1.onAlertCreated; } });
 var on_alert_updated_js_1 = require("./triggers/on-alert-updated.js");

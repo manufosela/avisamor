@@ -38,11 +38,14 @@ exports.createAlert = (0, https_1.onCall)({ region: "europe-west1" }, async (req
         if (!recentAlerts.empty) {
             throw new https_1.HttpsError("resource-exhausted", "Alert already active, please wait");
         }
+        const memberSnap = await db.collection("groupMembers").doc(`${groupId}_${uid}`).get();
+        const alerterName = memberSnap.exists ? memberSnap.data()?.displayName || "Alguien" : "Alguien";
         const alertRef = db.collection("alerts").doc();
         transaction.set(alertRef, {
             alertId: alertRef.id,
             groupId,
             triggeredBy: uid,
+            alerterName,
             triggerSource: source === "android" ? index_js_1.TriggerSource.ANDROID : index_js_1.TriggerSource.PWA,
             status: index_js_1.AlertStatus.ACTIVE,
             createdAt: firestore_1.FieldValue.serverTimestamp(),

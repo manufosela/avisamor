@@ -5,6 +5,7 @@ export declare const adminListGroups: import("firebase-functions/v2/https").Call
     groups: {
         groupId: string;
         name: any;
+        code: any;
         planId: any;
         blocked: any;
         createdBy: any;
@@ -27,6 +28,14 @@ export declare const adminUpdateGroup: import("firebase-functions/v2/https").Cal
     groupId: string;
     updates: Record<string, unknown>;
 }>, unknown>;
+export declare const adminDeleteGroup: import("firebase-functions/v2/https").CallableFunction<any, Promise<{
+    success: boolean;
+    groupId: string;
+}>, unknown>;
+export declare const adminBumpVersion: import("firebase-functions/v2/https").CallableFunction<any, Promise<{
+    version: string;
+}>, unknown>;
+export declare const bumpVersion: import("firebase-functions/v2/https").HttpsFunction;
 export declare const adminCheckSetup: import("firebase-functions/v2/https").CallableFunction<any, Promise<{
     setupComplete: boolean;
 }>, unknown>;

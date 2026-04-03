@@ -4,45 +4,29 @@ exports.createGroup = void 0;
 const https_1 = require("firebase-functions/v2/https");
 const firestore_1 = require("firebase-admin/firestore");
 const index_js_1 = require("../models/index.js");
-const validation_js_1 = require("../utils/validation.js");
 const plan_limits_js_1 = require("../helpers/plan-limits.js");
-function generateCode() {
-    return Math.floor(100000 + Math.random() * 900000).toString();
-}
-async function generateUniqueCode(db) {
-    const maxAttempts = 10;
-    for (let i = 0; i < maxAttempts; i++) {
-        const code = generateCode();
-        const snapshot = await db
-            .collection("groups")
-            .where("code", "==", code)
-            .limit(1)
-            .get();
-        if (snapshot.empty) {
-            return code;
-        }
-    }
-    throw new https_1.HttpsError("internal", "Unable to generate unique code");
-}
+const group_code_js_1 = require("../utils/group-code.js");
 exports.createGroup = (0, https_1.onCall)({ region: "europe-west1" }, async (request) => {
     if (!request.auth) {
         throw new https_1.HttpsError("unauthenticated", "Authentication required");
     }
-    const { name, role } = request.data;
-    (0, validation_js_1.validateDisplayName)(name);
+    const { groupName, role } = request.data;
+    if (!groupName || typeof groupName !== "string" || groupName.trim().length < 2) {
+        throw new https_1.HttpsError("invalid-argument", "Group name is required (min 2 chars)");
+    }
     if (!role || !Object.values(index_js_1.MemberRole).includes(role)) {
         throw new https_1.HttpsError("invalid-argument", "Valid role is required (alerter or responder)");
     }
     const db = (0, firestore_1.getFirestore)();
-    // Check plan limit for groups (pass ownerUid as groupId for count)
     await (0, plan_limits_js_1.validatePlanLimit)(db, request.auth.uid, "groups", index_js_1.DEFAULT_PLAN_ID);
-    const code = await generateUniqueCode(db);
+    const code = await (0, group_code_js_1.generateUniqueGroupCode)(db);
     const groupRef = db.collection("groups").doc();
     const groupId = groupRef.id;
+    const displayName = request.auth.token?.name || request.auth.token?.email || "Usuario";
     const groupData = {
         groupId,
         code,
-        name,
+        name: groupName.trim(),
         createdBy: request.auth.uid,
         createdAt: firestore_1.FieldValue.serverTimestamp(),
         alertExpirySeconds: 60,
@@ -58,11 +42,11 @@ exports.createGroup = (0, https_1.onCall)({ region: "europe-west1" }, async (req
         uid: request.auth.uid,
         groupId,
         role: role,
-        displayName: name,
+        displayName,
         fcmToken: null,
         joinedAt: firestore_1.FieldValue.serverTimestamp(),
     };
     await db.collection("groupMembers").doc(compositeKey).set(memberData);
-    return { groupId, code };
+    return { groupId, code, groupName: groupName.trim() };
 });
 //# sourceMappingURL=create-group.js.map

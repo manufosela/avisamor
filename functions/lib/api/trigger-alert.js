@@ -72,11 +72,18 @@ exports.triggerAlert = (0, https_1.onRequest)({ region: "europe-west1" }, async 
             if (!recentAlerts.empty) {
                 return null; // debounce hit
             }
+            const alerterSnap = await db.collection("groupMembers")
+                .where("groupId", "==", groupId)
+                .where("role", "==", "alerter")
+                .limit(1)
+                .get();
+            const alerterName = alerterSnap.empty ? "Botón Flic" : alerterSnap.docs[0].data().displayName || "Botón Flic";
             const alertRef = db.collection("alerts").doc();
             transaction.set(alertRef, {
                 alertId: alertRef.id,
                 groupId,
                 triggeredBy: "flic-button",
+                alerterName,
                 triggerSource: index_js_1.TriggerSource.FLIC,
                 status: index_js_1.AlertStatus.ACTIVE,
                 createdAt: firestore_1.FieldValue.serverTimestamp(),

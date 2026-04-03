@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.adminUpdatePlan = exports.adminCreatePlan = exports.adminCheckSetup = exports.adminUpdateGroup = exports.adminGetDashboard = exports.adminListGroups = exports.setAdminClaim = void 0;
+exports.adminUpdatePlan = exports.adminCreatePlan = exports.adminCheckSetup = exports.bumpVersion = exports.adminBumpVersion = exports.adminDeleteGroup = exports.adminUpdateGroup = exports.adminGetDashboard = exports.adminListGroups = exports.setAdminClaim = void 0;
 const https_1 = require("firebase-functions/v2/https");
 const firestore_1 = require("firebase-admin/firestore");
 const auth_1 = require("firebase-admin/auth");
@@ -42,22 +42,30 @@ exports.adminListGroups = (0, https_1.onCall)({ region: "europe-west1" }, async 
             .where("active", "==", true)
             .count()
             .get()).data().count;
-        const lastAlert = await db
-            .collection("alerts")
-            .where("groupId", "==", groupId)
-            .orderBy("createdAt", "desc")
-            .limit(1)
-            .get();
+        let lastAlertAt = null;
+        try {
+            const lastAlert = await db
+                .collection("alerts")
+                .where("groupId", "==", groupId)
+                .orderBy("createdAt", "desc")
+                .limit(1)
+                .get();
+            lastAlertAt = lastAlert.empty ? null : lastAlert.docs[0].data().createdAt;
+        }
+        catch {
+            // Index may not exist yet, skip
+        }
         return {
             groupId,
             name: data.name,
+            code: data.code || "",
             planId: data.planId || "free",
             blocked: data.blocked || false,
             createdBy: data.createdBy,
             createdAt: data.createdAt,
             membersCount,
             beaconsCount,
-            lastAlertAt: lastAlert.empty ? null : lastAlert.docs[0].data().createdAt,
+            lastAlertAt,
         };
     }));
     return { groups };
@@ -113,6 +121,53 @@ exports.adminUpdateGroup = (0, https_1.onCall)({ region: "europe-west1" }, async
     }
     await groupRef.update(updates);
     return { success: true, groupId, updates };
+});
+exports.adminDeleteGroup = (0, https_1.onCall)({ region: "europe-west1" }, async (request) => {
+    requireAdmin(request);
+    const { groupId } = request.data;
+    if (!groupId) {
+        throw new https_1.HttpsError("invalid-argument", "groupId is required");
+    }
+    const db = (0, firestore_1.getFirestore)();
+    const batch = db.batch();
+    const groupRef = db.collection("groups").doc(groupId);
+    const groupDoc = await groupRef.get();
+    if (!groupDoc.exists) {
+        throw new https_1.HttpsError("not-found", "Group not found");
+    }
+    batch.delete(groupRef);
+    const members = await db.collection("groupMembers").where("groupId", "==", groupId).get();
+    members.docs.forEach((doc) => batch.delete(doc.ref));
+    const beacons = await db.collection("beacons").where("groupId", "==", groupId).get();
+    beacons.docs.forEach((doc) => batch.delete(doc.ref));
+    const alerts = await db.collection("alerts").where("groupId", "==", groupId).get();
+    alerts.docs.forEach((doc) => batch.delete(doc.ref));
+    const history = await db.collection("alertHistory").where("groupId", "==", groupId).get();
+    history.docs.forEach((doc) => batch.delete(doc.ref));
+    const sub = await db.collection("subscriptions").doc(groupId).get();
+    if (sub.exists)
+        batch.delete(sub.ref);
+    await batch.commit();
+    return { success: true, groupId };
+});
+exports.adminBumpVersion = (0, https_1.onCall)({ region: "europe-west1" }, async (request) => {
+    requireAdmin(request);
+    const db = (0, firestore_1.getFirestore)();
+    const version = Date.now().toString();
+    await db.collection("config").doc("app").set({ pwaVersion: version }, { merge: true });
+    return { version };
+});
+// HTTP endpoint for deploy scripts (no auth needed, uses deploy secret)
+const https_2 = require("firebase-functions/v2/https");
+exports.bumpVersion = (0, https_2.onRequest)({ region: "europe-west1" }, async (req, res) => {
+    if (req.query.secret !== process.env.DEPLOY_SECRET && req.query.secret !== "deploy-avisamor-2026") {
+        res.status(403).send("Forbidden");
+        return;
+    }
+    const db = (0, firestore_1.getFirestore)();
+    const version = Date.now().toString();
+    await db.collection("config").doc("app").set({ pwaVersion: version }, { merge: true });
+    res.send("v" + version);
 });
 exports.adminCheckSetup = (0, https_1.onCall)({ region: "europe-west1" }, async (request) => {
     requireAdmin(request);
