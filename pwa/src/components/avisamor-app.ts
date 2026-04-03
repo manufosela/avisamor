@@ -138,10 +138,18 @@ export class AvisamorApp extends LitElement {
   @state() private _setupMode = '';
   @state() private _error = '';
 
+  @state() private _debug: string[] = [];
+
+  private _log(msg: string): void {
+    this._debug = [...this._debug.slice(-9), msg];
+  }
+
   connectedCallback(): void {
     super.connectedCallback();
-    getRedirectResult(auth).catch(() => {});
+    this._log('init');
+    getRedirectResult(auth).then(r => { if (r) this._log('redirect: ' + r.user?.email); }).catch(e => this._log('redirect err: ' + e.message));
     onAuthStateChanged(auth, async (user) => {
+      this._log('auth: ' + (user ? user.email : 'null'));
       if (user) {
         this._user = user;
         await this._loadGroups();
@@ -154,10 +162,14 @@ export class AvisamorApp extends LitElement {
 
   private async _login(): Promise<void> {
     this._error = '';
+    this._log('login start');
     try {
       await signInWithPopup(auth, googleProvider);
+      this._log('login ok');
     } catch (err: unknown) {
-      this._error = err instanceof Error ? err.message : 'Error al iniciar sesión';
+      const msg = err instanceof Error ? err.message : 'Error desconocido';
+      this._log('login err: ' + msg);
+      this._error = msg;
     }
   }
 
@@ -231,6 +243,11 @@ export class AvisamorApp extends LitElement {
       ` : nothing}
       ${this._appState === 'alerter' && this._activeRole === 'responder' ? html`
         <avisamor-responder .groupId=${this._activeGroupId} .groupCode=${this._activeGroupCode} .groupName=${this._activeGroupName} @logout=${this._logout} @switch-group=${() => this._nav()}></avisamor-responder>
+      ` : nothing}
+      ${this._debug.length > 0 && new URLSearchParams(window.location.search).has('debug') ? html`
+        <div style="position:fixed;bottom:0;left:0;right:0;background:rgba(0,0,0,0.85);color:#0f0;font-family:monospace;font-size:11px;padding:8px;max-height:30vh;overflow:auto;z-index:9999;">
+          ${this._debug.map(d => html`<div>${d}</div>`)}
+        </div>
       ` : nothing}
     `;
   }
