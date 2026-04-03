@@ -5,6 +5,7 @@ import { signInWithPopup, signOut, onAuthStateChanged, type User } from 'firebas
 import { httpsCallable } from 'firebase/functions';
 import './avisamor-setup.js';
 import './avisamor-alerter.js';
+import './avisamor-responder.js';
 import './avisamor-offline-indicator.js';
 
 interface GroupInfo {
@@ -120,6 +121,7 @@ export class AvisamorApp extends LitElement {
   @state() private _groups: GroupInfo[] = [];
   @state() private _activeGroupId = '';
   @state() private _activeRole = '';
+  @state() private _setupMode = '';
   @state() private _error = '';
 
   connectedCallback(): void {
@@ -179,7 +181,8 @@ export class AvisamorApp extends LitElement {
     this._loadGroups();
   }
 
-  private _showSetup(): void {
+  private _showSetup(mode: string = ''): void {
+    this._setupMode = mode;
     this._appState = 'setup';
     this._error = '';
   }
@@ -197,10 +200,13 @@ export class AvisamorApp extends LitElement {
       ${this._appState === 'login' ? this._renderLogin() : nothing}
       ${this._appState === 'groups' ? this._renderGroups() : nothing}
       ${this._appState === 'setup' ? html`
-        <avisamor-setup @group-joined=${this._onGroupJoined}></avisamor-setup>
+        <avisamor-setup .initialMode=${this._setupMode} @group-joined=${this._onGroupJoined} @back=${() => this._loadGroups()}></avisamor-setup>
       ` : nothing}
-      ${this._appState === 'alerter' ? html`
+      ${this._appState === 'alerter' && this._activeRole === 'alerter' ? html`
         <avisamor-alerter .groupId=${this._activeGroupId}></avisamor-alerter>
+      ` : nothing}
+      ${this._appState === 'alerter' && this._activeRole === 'responder' ? html`
+        <avisamor-responder .groupId=${this._activeGroupId}></avisamor-responder>
       ` : nothing}
     `;
   }
@@ -242,10 +248,10 @@ export class AvisamorApp extends LitElement {
         ` : nothing}
 
         <div class="buttons">
-          <button class="btn-primary" @click=${() => this._showSetup()}>
+          <button class="btn-primary" @click=${() => this._showSetup('create')}>
             Crear grupo nuevo
           </button>
-          <button class="btn-secondary" @click=${() => this._showSetup()}>
+          <button class="btn-secondary" @click=${() => this._showSetup('join')}>
             Unirse a un grupo
           </button>
         </div>

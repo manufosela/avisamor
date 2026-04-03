@@ -1,5 +1,5 @@
 import { LitElement, html, css, nothing } from 'lit';
-import { customElement, state } from 'lit/decorators.js';
+import { customElement, property, state } from 'lit/decorators.js';
 import { functions } from '../lib/firebase.js';
 import { httpsCallable } from 'firebase/functions';
 
@@ -91,6 +91,8 @@ export class AvisamorSetup extends LitElement {
     }
   `;
 
+  @property({ type: String }) initialMode = '';
+
   @state() private _mode: SetupMode = 'choose';
   @state() private _groupName = '';
   @state() private _role = '';
@@ -99,6 +101,13 @@ export class AvisamorSetup extends LitElement {
   @state() private _createdGroupId = '';
   @state() private _loading = false;
   @state() private _error = '';
+
+  connectedCallback(): void {
+    super.connectedCallback();
+    if (this.initialMode === 'create' || this.initialMode === 'join') {
+      this._mode = this.initialMode as SetupMode;
+    }
+  }
 
   private _setMode(mode: SetupMode): void {
     this._mode = mode;
@@ -183,7 +192,7 @@ export class AvisamorSetup extends LitElement {
           @click=${this._createGroup}>
           ${this._loading ? 'Creando...' : 'Crear grupo'}
         </button>
-        <button class="btn-back" @click=${() => this._setMode('choose')}>Volver</button>
+        <button class="btn-back" @click=${() => this.dispatchEvent(new CustomEvent('back', { bubbles: true, composed: true }))}>Volver</button>
       </div>
     `;
   }
@@ -202,7 +211,7 @@ export class AvisamorSetup extends LitElement {
           @click=${this._joinGroup}>
           ${this._loading ? 'Uniendo...' : 'Unirse al grupo'}
         </button>
-        <button class="btn-back" @click=${() => this._setMode('choose')}>Volver</button>
+        <button class="btn-back" @click=${() => this.dispatchEvent(new CustomEvent('back', { bubbles: true, composed: true }))}>Volver</button>
       </div>
     `;
   }
