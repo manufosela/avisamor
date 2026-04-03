@@ -1,22 +1,20 @@
 import { LitElement, html, css, nothing } from 'lit';
-import { customElement, property, state } from 'lit/decorators.js';
 import { db, functions } from '../lib/firebase.js';
 import { collection, query, where, onSnapshot, orderBy, limit } from 'firebase/firestore';
 import { httpsCallable } from 'firebase/functions';
-import type { Unsubscribe } from 'firebase/firestore';
 import './avisamor-zone-map.js';
 
-interface AlertData {
-  alertId: string;
-  status: string;
-  alerterName: string;
-  createdAt: { seconds: number } | null;
-  acceptedBy: Array<{ uid: string; displayName: string; zone?: string }>;
-  triggeredBy: string;
-}
-
-@customElement('avisamor-responder')
 export class AvisamorResponder extends LitElement {
+  static properties = {
+    groupId: { type: String },
+    groupCode: { type: String },
+    groupName: { type: String },
+    _alert: { state: true },
+    _elapsed: { state: true },
+    _accepting: { state: true },
+    _error: { state: true },
+  };
+
   static styles = css`
     :host {
       display: flex;
@@ -88,35 +86,37 @@ export class AvisamorResponder extends LitElement {
     }
   `;
 
-  @property({ type: String }) groupId = '';
-  @property({ type: String }) groupCode = '';
-  @property({ type: String }) groupName = '';
+  constructor() {
+    super();
+    this.groupId = '';
+    this.groupCode = '';
+    this.groupName = '';
+    this._alert = null;
+    this._elapsed = 0;
+    this._accepting = false;
+    this._error = '';
+    this._unsubscribe = null;
+    this._timerInterval = undefined;
+  }
 
-  @state() private _alert: AlertData | null = null;
-  @state() private _elapsed = 0;
-  @state() private _accepting = false;
-  @state() private _error = '';
-  private _unsubscribe: Unsubscribe | null = null;
-  private _timerInterval?: ReturnType<typeof setInterval>;
-
-  connectedCallback(): void {
+  connectedCallback() {
     super.connectedCallback();
     if (this.groupId) this._subscribe();
   }
 
-  disconnectedCallback(): void {
+  disconnectedCallback() {
     super.disconnectedCallback();
     this._cleanup();
   }
 
-  updated(changedProps: Map<string, unknown>): void {
+  updated(changedProps) {
     if (changedProps.has('groupId') && this.groupId) {
       this._cleanup();
       this._subscribe();
     }
   }
 
-  private _subscribe(): void {
+  _subscribe() {
     const alertsRef = collection(db, 'alerts');
     const q = query(
       alertsRef,
@@ -133,7 +133,7 @@ export class AvisamorResponder extends LitElement {
         return;
       }
       const doc = snapshot.docs[0];
-      this._alert = doc.data() as AlertData;
+      this._alert = doc.data();
       this._alert.alertId = doc.id;
 
       if (this._alert.status === 'active') {
@@ -144,7 +144,7 @@ export class AvisamorResponder extends LitElement {
     });
   }
 
-  private _startTimer(createdAt: { seconds: number } | null): void {
+  _startTimer(createdAt) {
     this._stopTimer();
     const startMs = createdAt ? createdAt.seconds * 1000 : Date.now();
     this._elapsed = Math.floor((Date.now() - startMs) / 1000);
@@ -153,40 +153,40 @@ export class AvisamorResponder extends LitElement {
     }, 1000);
   }
 
-  private _stopTimer(): void {
+  _stopTimer() {
     if (this._timerInterval) {
       clearInterval(this._timerInterval);
       this._timerInterval = undefined;
     }
   }
 
-  private _cleanup(): void {
+  _cleanup() {
     this._stopTimer();
     this._unsubscribe?.();
     this._unsubscribe = null;
   }
 
-  private _formatTime(seconds: number): string {
+  _formatTime(seconds) {
     const m = Math.floor(seconds / 60);
     const s = seconds % 60;
     return `${m}:${s.toString().padStart(2, '0')}`;
   }
 
-  private async _acceptAlert(): Promise<void> {
+  async _acceptAlert() {
     if (!this._alert) return;
     this._accepting = true;
     this._error = '';
     try {
       const fn = httpsCallable(functions, 'acceptAlert');
       await fn({ alertId: this._alert.alertId });
-    } catch (err: unknown) {
+    } catch (err) {
       this._error = err instanceof Error ? err.message : 'Error al aceptar';
     } finally {
       this._accepting = false;
     }
   }
 
-  private async _resolveAlert(): Promise<void> {
+  async _resolveAlert() {
     if (!this._alert) return;
     try {
       const fn = httpsCallable(functions, 'resolveAlert');
@@ -215,7 +215,7 @@ export class AvisamorResponder extends LitElement {
     `;
   }
 
-  private _renderWaiting() {
+  _renderWaiting() {
     return html`
       <div class="waiting">
         <div class="waiting-icon">🛡️</div>
@@ -225,8 +225,8 @@ export class AvisamorResponder extends LitElement {
     `;
   }
 
-  private _renderAlert() {
-    const a = this._alert!;
+  _renderAlert() {
+    const a = this._alert;
 
     if (a.status === 'active') {
       return html`
@@ -257,8 +257,4 @@ export class AvisamorResponder extends LitElement {
   }
 }
 
-declare global {
-  interface HTMLElementTagNameMap {
-    'avisamor-responder': AvisamorResponder;
-  }
-}
+customElements.define('avisamor-responder', AvisamorResponder);

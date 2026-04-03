@@ -1,14 +1,18 @@
 import { LitElement, html, css } from 'lit';
-import { customElement, property, state } from 'lit/decorators.js';
 import { app } from '../lib/firebase.js';
 import { getFunctions, httpsCallable } from 'firebase/functions';
 import './avisamor-alert-status.js';
 import './avisamor-zone-map.js';
 
-type AlerterState = 'idle' | 'sending' | 'sent' | 'error';
-
-@customElement('avisamor-alerter')
 export class AvisamorAlerter extends LitElement {
+  static properties = {
+    groupId: { type: String },
+    groupName: { type: String },
+    groupCode: { type: String },
+    _state: { state: true },
+    _errorMsg: { state: true },
+  };
+
   static styles = css`
     :host {
       display: flex;
@@ -123,22 +127,23 @@ export class AvisamorAlerter extends LitElement {
     }
   `;
 
-  @property({ type: String }) groupId = '';
-  @property({ type: String }) groupName = '';
-  @property({ type: String }) groupCode = '';
+  constructor() {
+    super();
+    this.groupId = '';
+    this.groupName = '';
+    this.groupCode = '';
+    this._state = 'idle';
+    this._errorMsg = '';
+    this._functions = getFunctions(app, 'europe-west1');
+    this._sentTimer = undefined;
+  }
 
-  @state() private _state: AlerterState = 'idle';
-  @state() private _errorMsg = '';
-
-  private _functions = getFunctions(app, 'europe-west1');
-  private _sentTimer?: ReturnType<typeof setTimeout>;
-
-  disconnectedCallback(): void {
+  disconnectedCallback() {
     super.disconnectedCallback();
     if (this._sentTimer) clearTimeout(this._sentTimer);
   }
 
-  private async _sendAlert(): Promise<void> {
+  async _sendAlert() {
     if (this._state === 'sending' || this._state === 'sent') return;
 
     this._state = 'sending';
@@ -152,7 +157,7 @@ export class AvisamorAlerter extends LitElement {
       this._sentTimer = setTimeout(() => {
         this._state = 'idle';
       }, 3000);
-    } catch (err: unknown) {
+    } catch (err) {
       this._state = 'error';
       if (err instanceof Error) {
         if (err.message.includes('resource-exhausted') || err.message.includes('already active')) {
@@ -171,7 +176,7 @@ export class AvisamorAlerter extends LitElement {
     }
   }
 
-  private _getButtonText(): string {
+  _getButtonText() {
     switch (this._state) {
       case 'idle': return 'PULSA PARA PEDIR AYUDA';
       case 'sending': return 'ENVIANDO...';
@@ -210,8 +215,4 @@ export class AvisamorAlerter extends LitElement {
   }
 }
 
-declare global {
-  interface HTMLElementTagNameMap {
-    'avisamor-alerter': AvisamorAlerter;
-  }
-}
+customElements.define('avisamor-alerter', AvisamorAlerter);

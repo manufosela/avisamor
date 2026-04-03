@@ -1,12 +1,20 @@
 import { LitElement, html, css, nothing } from 'lit';
-import { customElement, property, state } from 'lit/decorators.js';
 import { functions } from '../lib/firebase.js';
 import { httpsCallable } from 'firebase/functions';
 
-type SetupMode = 'choose' | 'create' | 'join' | 'show-code';
-
-@customElement('avisamor-setup')
 export class AvisamorSetup extends LitElement {
+  static properties = {
+    initialMode: { type: String },
+    _mode: { state: true },
+    _groupName: { state: true },
+    _role: { state: true },
+    _code: { state: true },
+    _createdCode: { state: true },
+    _createdGroupId: { state: true },
+    _loading: { state: true },
+    _error: { state: true },
+  };
+
   static styles = css`
     :host {
       font-family: system-ui, -apple-system, sans-serif;
@@ -91,58 +99,60 @@ export class AvisamorSetup extends LitElement {
     }
   `;
 
-  @property({ type: String }) initialMode = '';
+  constructor() {
+    super();
+    this.initialMode = '';
+    this._mode = 'choose';
+    this._groupName = '';
+    this._role = '';
+    this._code = '';
+    this._createdCode = '';
+    this._createdGroupId = '';
+    this._loading = false;
+    this._error = '';
+  }
 
-  @state() private _mode: SetupMode = 'choose';
-  @state() private _groupName = '';
-  @state() private _role = '';
-  @state() private _code = '';
-  @state() private _createdCode = '';
-  @state() private _createdGroupId = '';
-  @state() private _loading = false;
-  @state() private _error = '';
-
-  connectedCallback(): void {
+  connectedCallback() {
     super.connectedCallback();
     if (this.initialMode === 'create' || this.initialMode === 'join') {
-      this._mode = this.initialMode as SetupMode;
+      this._mode = this.initialMode;
     }
   }
 
-  private _setMode(mode: SetupMode): void {
+  _setMode(mode) {
     this._mode = mode;
     this._error = '';
   }
 
-  private async _createGroup(): Promise<void> {
+  async _createGroup() {
     this._loading = true;
     this._error = '';
     try {
       const fn = httpsCallable(functions, 'createGroup');
       const result = await fn({ groupName: this._groupName.trim(), role: this._role });
-      const data = result.data as { groupId: string; code: string };
+      const data = result.data;
       this._createdCode = data.code;
       this._createdGroupId = data.groupId;
       this._mode = 'show-code';
-    } catch (err: unknown) {
+    } catch (err) {
       this._error = err instanceof Error ? err.message : 'Error al crear grupo';
     } finally {
       this._loading = false;
     }
   }
 
-  private async _joinGroup(): Promise<void> {
+  async _joinGroup() {
     this._loading = true;
     this._error = '';
     try {
       const fn = httpsCallable(functions, 'joinGroup');
       const result = await fn({ code: this._code.trim().toLowerCase(), role: this._role });
-      const data = result.data as { groupId: string };
+      const data = result.data;
       this.dispatchEvent(new CustomEvent('group-joined', {
         detail: { groupId: data.groupId, role: this._role },
         bubbles: true, composed: true,
       }));
-    } catch (err: unknown) {
+    } catch (err) {
       this._error = err instanceof Error ? err.message : 'Error al unirse';
     } finally {
       this._loading = false;
@@ -165,7 +175,7 @@ export class AvisamorSetup extends LitElement {
     `;
   }
 
-  private _renderChoose() {
+  _renderChoose() {
     return html`
       <div class="buttons">
         <button class="btn-primary" @click=${() => this._setMode('create')}>
@@ -178,12 +188,12 @@ export class AvisamorSetup extends LitElement {
     `;
   }
 
-  private _renderCreate() {
+  _renderCreate() {
     return html`
       <div class="field">
         <label>Nombre del grupo</label>
         <input type="text" placeholder="Ej: Familia García" .value=${this._groupName}
-          @input=${(e: InputEvent) => { this._groupName = (e.target as HTMLInputElement).value; }} />
+          @input=${(e) => { this._groupName = e.target.value; }} />
       </div>
       ${this._renderRoleSelector()}
       <div class="buttons">
@@ -197,12 +207,12 @@ export class AvisamorSetup extends LitElement {
     `;
   }
 
-  private _renderJoin() {
+  _renderJoin() {
     return html`
       <div class="field">
         <label>Código del grupo</label>
         <input type="text" placeholder="Ej: zen-wolf-forge" .value=${this._code}
-          @input=${(e: InputEvent) => { this._code = (e.target as HTMLInputElement).value; }} />
+          @input=${(e) => { this._code = e.target.value; }} />
       </div>
       ${this._renderRoleSelector()}
       <div class="buttons">
@@ -216,7 +226,7 @@ export class AvisamorSetup extends LitElement {
     `;
   }
 
-  private _renderRoleSelector() {
+  _renderRoleSelector() {
     return html`
       <label>Tu rol en el grupo</label>
       <div class="role-selector">
@@ -234,7 +244,7 @@ export class AvisamorSetup extends LitElement {
     `;
   }
 
-  private _renderShowCode() {
+  _renderShowCode() {
     return html`
       <p style="font-size:1.1rem; font-weight:600;">Grupo creado</p>
       <div class="code-display">${this._createdCode}</div>
@@ -253,8 +263,4 @@ export class AvisamorSetup extends LitElement {
   }
 }
 
-declare global {
-  interface HTMLElementTagNameMap {
-    'avisamor-setup': AvisamorSetup;
-  }
-}
+customElements.define('avisamor-setup', AvisamorSetup);

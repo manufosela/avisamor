@@ -1,25 +1,27 @@
 import { LitElement, html, css, nothing } from 'lit';
-import { customElement, state } from 'lit/decorators.js';
 import { auth, functions, googleProvider } from '../lib/firebase.js';
-import { signInWithPopup, signInWithRedirect, getRedirectResult, signOut, onAuthStateChanged, type User } from 'firebase/auth';
+import { signInWithPopup, signInWithRedirect, getRedirectResult, signOut, onAuthStateChanged } from 'firebase/auth';
 import { httpsCallable } from 'firebase/functions';
 import './avisamor-setup.js';
 import './avisamor-alerter.js';
 import './avisamor-responder.js';
 import './avisamor-offline-indicator.js';
+import { initVersionCheck } from '../lib/version-check.js';
 
-interface GroupInfo {
-  groupId: string;
-  groupName: string;
-  code: string;
-  role: string;
-  blocked: boolean;
-}
-
-type AppState = 'loading' | 'login' | 'groups' | 'setup' | 'alerter';
-
-@customElement('avisamor-app')
 export class AvisamorApp extends LitElement {
+  static properties = {
+    _appState: { state: true },
+    _user: { state: true },
+    _groups: { state: true },
+    _activeGroupId: { state: true },
+    _activeRole: { state: true },
+    _activeGroupCode: { state: true },
+    _activeGroupName: { state: true },
+    _setupMode: { state: true },
+    _error: { state: true },
+    _debug: { state: true },
+  };
+
   static styles = css`
     :host {
       display: block;
@@ -128,24 +130,27 @@ export class AvisamorApp extends LitElement {
     }
   `;
 
-  @state() private _appState: AppState = 'loading';
-  @state() private _user: User | null = null;
-  @state() private _groups: GroupInfo[] = [];
-  @state() private _activeGroupId = '';
-  @state() private _activeRole = '';
-  @state() private _activeGroupCode = '';
-  @state() private _activeGroupName = '';
-  @state() private _setupMode = '';
-  @state() private _error = '';
+  constructor() {
+    super();
+    this._appState = 'loading';
+    this._user = null;
+    this._groups = [];
+    this._activeGroupId = '';
+    this._activeRole = '';
+    this._activeGroupCode = '';
+    this._activeGroupName = '';
+    this._setupMode = '';
+    this._error = '';
+    this._debug = [];
+  }
 
-  @state() private _debug: string[] = [];
-
-  private _log(msg: string): void {
+  _log(msg) {
     this._debug = [...this._debug.slice(-9), msg];
   }
 
-  connectedCallback(): void {
+  connectedCallback() {
     super.connectedCallback();
+    initVersionCheck();
     this._log('init');
     getRedirectResult(auth).then(r => { if (r) this._log('redirect: ' + r.user?.email); }).catch(e => this._log('redirect err: ' + e.message));
     onAuthStateChanged(auth, async (user) => {
@@ -160,30 +165,30 @@ export class AvisamorApp extends LitElement {
     });
   }
 
-  private async _login(): Promise<void> {
+  async _login() {
     this._error = '';
     this._log('login start');
     try {
       await signInWithPopup(auth, googleProvider);
       this._log('login ok');
-    } catch (err: unknown) {
+    } catch (err) {
       const msg = err instanceof Error ? err.message : 'Error desconocido';
       this._log('login err: ' + msg);
       this._error = msg;
     }
   }
 
-  private async _logout(): Promise<void> {
+  async _logout() {
     await signOut(auth);
     this._groups = [];
     this._activeGroupId = '';
   }
 
-  private async _loadGroups(): Promise<void> {
+  async _loadGroups() {
     try {
       const fn = httpsCallable(functions, 'myGroups');
       const result = await fn();
-      const data = result.data as { groups: GroupInfo[] };
+      const data = result.data;
       this._groups = data.groups;
 
       if (this._groups.length === 0) {
@@ -198,7 +203,7 @@ export class AvisamorApp extends LitElement {
     }
   }
 
-  private _enterGroup(group: GroupInfo): void {
+  _enterGroup(group) {
     this._activeGroupId = group.groupId;
     this._activeRole = group.role;
     this._activeGroupCode = group.code;
@@ -206,18 +211,18 @@ export class AvisamorApp extends LitElement {
     this._appState = 'alerter';
   }
 
-  private _onGroupJoined(e: CustomEvent<{ groupId: string; role: string }>): void {
+  _onGroupJoined(e) {
     this._loadGroups();
   }
 
-  private _nav(): void {
+  _nav() {
     this._activeGroupId = '';
     this._activeRole = '';
     this._appState = 'groups';
     this._loadGroups();
   }
 
-  private _showSetup(mode: string = ''): void {
+  _showSetup(mode = '') {
     this._setupMode = mode;
     this._appState = 'setup';
     this._error = '';
@@ -252,7 +257,7 @@ export class AvisamorApp extends LitElement {
     `;
   }
 
-  private _renderLogin() {
+  _renderLogin() {
     return html`
       <div class="login-screen">
         <h1>AvisaBlue</h1>
@@ -266,7 +271,7 @@ export class AvisamorApp extends LitElement {
     `;
   }
 
-  private _renderGroups() {
+  _renderGroups() {
     return html`
       <div class="groups-screen">
         <div class="user-header">
@@ -301,8 +306,4 @@ export class AvisamorApp extends LitElement {
   }
 }
 
-declare global {
-  interface HTMLElementTagNameMap {
-    'avisamor-app': AvisamorApp;
-  }
-}
+customElements.define('avisamor-app', AvisamorApp);
