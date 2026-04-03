@@ -4,14 +4,13 @@ exports.cancelAlert = exports.resolveAlert = void 0;
 const https_1 = require("firebase-functions/v2/https");
 const firestore_1 = require("firebase-admin/firestore");
 const index_js_1 = require("../models/index.js");
+const validation_js_1 = require("../utils/validation.js");
 exports.resolveAlert = (0, https_1.onCall)({ region: "europe-west1" }, async (request) => {
     if (!request.auth) {
         throw new https_1.HttpsError("unauthenticated", "Authentication required");
     }
     const { alertId } = request.data;
-    if (!alertId || typeof alertId !== "string") {
-        throw new https_1.HttpsError("invalid-argument", "alertId is required");
-    }
+    (0, validation_js_1.validateAlertId)(alertId);
     const db = (0, firestore_1.getFirestore)();
     const uid = request.auth.uid;
     const result = await db.runTransaction(async (transaction) => {
@@ -48,9 +47,7 @@ exports.cancelAlert = (0, https_1.onCall)({ region: "europe-west1" }, async (req
         throw new https_1.HttpsError("unauthenticated", "Authentication required");
     }
     const { alertId } = request.data;
-    if (!alertId || typeof alertId !== "string") {
-        throw new https_1.HttpsError("invalid-argument", "alertId is required");
-    }
+    (0, validation_js_1.validateAlertId)(alertId);
     const db = (0, firestore_1.getFirestore)();
     const uid = request.auth.uid;
     const result = await db.runTransaction(async (transaction) => {

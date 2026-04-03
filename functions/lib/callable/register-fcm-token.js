@@ -3,17 +3,14 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.registerFcmToken = void 0;
 const https_1 = require("firebase-functions/v2/https");
 const firestore_1 = require("firebase-admin/firestore");
+const validation_js_1 = require("../utils/validation.js");
 exports.registerFcmToken = (0, https_1.onCall)({ region: "europe-west1" }, async (request) => {
     if (!request.auth) {
         throw new https_1.HttpsError("unauthenticated", "Authentication required");
     }
     const { groupId, fcmToken } = request.data;
-    if (!groupId || typeof groupId !== "string") {
-        throw new https_1.HttpsError("invalid-argument", "Group ID is required");
-    }
-    if (!fcmToken || typeof fcmToken !== "string") {
-        throw new https_1.HttpsError("invalid-argument", "FCM token is required");
-    }
+    (0, validation_js_1.validateGroupId)(groupId);
+    (0, validation_js_1.validateFcmToken)(fcmToken);
     const db = (0, firestore_1.getFirestore)();
     const compositeKey = `${groupId}_${request.auth.uid}`;
     const memberRef = db.collection("groupMembers").doc(compositeKey);

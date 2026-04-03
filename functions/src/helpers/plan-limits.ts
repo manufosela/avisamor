@@ -7,14 +7,21 @@ type LimitResource = "members" | "beacons" | "groups";
 
 async function getPlan(db: Firestore, planId: string): Promise<Plan> {
   const planDoc = await db.collection("plans").doc(planId).get();
-  if (!planDoc.exists) {
-    const defaultDoc = await db.collection("plans").doc(DEFAULT_PLAN_ID).get();
-    if (!defaultDoc.exists) {
-      throw new HttpsError("internal", "Plan configuration not found");
-    }
-    return defaultDoc.data() as Plan;
+  if (planDoc.exists) {
+    return planDoc.data() as Plan;
   }
-  return planDoc.data() as Plan;
+
+  if (planId !== DEFAULT_PLAN_ID) {
+    const defaultDoc = await db.collection("plans").doc(DEFAULT_PLAN_ID).get();
+    if (defaultDoc.exists) {
+      return defaultDoc.data() as Plan;
+    }
+  }
+
+  throw new HttpsError(
+    "failed-precondition",
+    "La plataforma no está configurada. El administrador debe crear los planes desde el panel de admin."
+  );
 }
 
 async function getGroupPlanId(db: Firestore, groupId: string): Promise<string> {
@@ -48,7 +55,6 @@ async function countResource(
         .get();
       return snapshot.data().count;
     case "groups":
-      // groupId here is actually the ownerUid
       snapshot = await db
         .collection("groups")
         .where("createdBy", "==", groupId)
@@ -87,7 +93,7 @@ export async function validatePlanLimit(
   const plan = await getPlan(db, resolvedPlanId);
   const limit = getLimitForResource(plan.limits, resource);
 
-  if (limit === -1) return; // unlimited
+  if (limit === -1) return;
 
   const current = await countResource(db, groupIdOrOwnerUid, resource);
 
