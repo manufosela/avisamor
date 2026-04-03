@@ -20,6 +20,14 @@ android/app/build/
 android/.gradle/
 android/app/google-services.json
 
+# Functions build output
+functions/lib/
+
+# Admin
+admin/node_modules/
+admin/.astro/
+admin/dist/
+
 # IDE
 .idea/
 *.iml
