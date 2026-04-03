@@ -168,8 +168,13 @@ export class AvisamorApp extends LitElement {
   async _login() {
     this._error = '';
     this._log('login start');
+    const isMobile = /Android|iPhone|iPad/i.test(navigator.userAgent);
     try {
-      await signInWithPopup(auth, googleProvider);
+      if (isMobile) {
+        await signInWithRedirect(auth, googleProvider);
+      } else {
+        await signInWithPopup(auth, googleProvider);
+      }
       this._log('login ok');
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Error desconocido';
