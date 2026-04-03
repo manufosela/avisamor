@@ -242,7 +242,7 @@ export class AvisamorSetup extends LitElement {
   render() {
     return html`
       <div class="setup-card">
-        <h1>Avisamor</h1>
+        <h1>AvisaBlue</h1>
         <p class="subtitle">Alertas para personas dependientes</p>
 
         ${this._mode === 'choose' ? this._renderChoose() : ''}
