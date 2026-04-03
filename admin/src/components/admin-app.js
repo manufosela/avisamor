@@ -429,8 +429,12 @@ export class AdminApp extends LitElement {
           `)}
         </tbody>
       </table>
-      <h3 style="margin-top:24px">Crear nuevo plan:</h3>
-      ${this._renderPlanForm()}
+      <details>
+        <summary class="btn-add" style="cursor:pointer; display:inline-block; margin-top:16px;">+ Crear nuevo plan</summary>
+        <div style="margin-top:12px;">
+          ${this._renderPlanForm()}
+        </div>
+      </details>
     `;
   }
 }
