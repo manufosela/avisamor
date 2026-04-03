@@ -69,6 +69,12 @@ export class AvisamorResponder extends LitElement {
     .accepted-card h2 { margin: 0 0 8px; }
     .accepted-card p { margin: 0; }
 
+    .btn-ok {
+      width: 100%; padding: 14px; font-size: 1.1rem; font-weight: 700;
+      background: rgba(255,255,255,0.2); color: #fff; border: 2px solid rgba(255,255,255,0.5);
+      border-radius: 12px; cursor: pointer; margin-top: 16px;
+    }
+
     .error { color: #dc2626; text-align: center; padding: 12px; }
 
     @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.7; } }
@@ -178,6 +184,16 @@ export class AvisamorResponder extends LitElement {
     }
   }
 
+  private async _resolveAlert(): Promise<void> {
+    if (!this._alert) return;
+    try {
+      const fn = httpsCallable(functions, 'resolveAlert');
+      await fn({ alertId: this._alert.alertId });
+    } catch {
+      // Alert may already be resolved
+    }
+  }
+
   render() {
     return html`
       <div class="header">
@@ -225,6 +241,7 @@ export class AvisamorResponder extends LitElement {
         <div class="accepted-card">
           <h2>Alerta aceptada</h2>
           <p>${acceptor?.displayName || 'Alguien'} va a acudir${zoneText}</p>
+          <button class="btn-ok" @click=${this._resolveAlert}>OK, enterado</button>
         </div>
       `;
     }

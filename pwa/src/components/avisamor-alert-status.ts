@@ -1,7 +1,8 @@
 import { LitElement, html, css, nothing } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
-import { db } from '../lib/firebase.js';
+import { db, functions } from '../lib/firebase.js';
 import { collection, query, where, onSnapshot, orderBy, limit } from 'firebase/firestore';
+import { httpsCallable } from 'firebase/functions';
 import type { Unsubscribe } from 'firebase/firestore';
 
 interface AlertData {
@@ -78,6 +79,18 @@ export class AvisamorAlertStatus extends LitElement {
       }
     }
 
+    .btn-ok {
+      margin-top: 12px;
+      padding: 10px 24px;
+      font-size: 1rem;
+      font-weight: 700;
+      background: rgba(255,255,255,0.25);
+      color: #fff;
+      border: 2px solid rgba(255,255,255,0.5);
+      border-radius: 8px;
+      cursor: pointer;
+    }
+
     @media (prefers-color-scheme: dark) {
       .status-active {
         background: #b45309;
@@ -129,6 +142,7 @@ export class AvisamorAlertStatus extends LitElement {
 
       const doc = snapshot.docs[0];
       const data = doc.data() as AlertData;
+      data.alertId = doc.id;
       this._alert = data;
 
       if (data.status === 'active') {
@@ -170,6 +184,16 @@ export class AvisamorAlertStatus extends LitElement {
     return `${m}:${s.toString().padStart(2, '0')}`;
   }
 
+  private async _resolveAlert(): Promise<void> {
+    if (!this._alert) return;
+    try {
+      const fn = httpsCallable(functions, 'resolveAlert');
+      await fn({ alertId: this._alert.alertId });
+    } catch {
+      // May already be resolved
+    }
+  }
+
   render() {
     if (!this._alert) return nothing;
 
@@ -192,6 +216,7 @@ export class AvisamorAlertStatus extends LitElement {
       return html`
         <div class="status-container status-accepted" role="alert" aria-live="polite">
           <p class="status-text">${responderName} va a acudir${zoneText}</p>
+          <button class="btn-ok" @click=${this._resolveAlert}>OK, enterado</button>
         </div>
       `;
     }
