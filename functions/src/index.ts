@@ -20,7 +20,7 @@ export { registerBeacon, listBeacons } from "./callable/register-beacon.js";
 export { updateMemberZone } from "./callable/update-member-zone.js";
 export { getPlans } from "./callable/get-plans.js";
 export { deleteMyData } from "./callable/delete-my-data.js";
-export { setAdminClaim, adminListGroups, adminGetDashboard, adminUpdateGroup, adminDeleteGroup, adminCheckSetup, adminCreatePlan, adminUpdatePlan } from "./callable/admin.js";
+export { setAdminClaim, adminListGroups, adminGetDashboard, adminUpdateGroup, adminDeleteGroup, adminCheckSetup, adminCreatePlan, adminUpdatePlan, adminBumpVersion, bumpVersion } from "./callable/admin.js";
 export { adminGetGroup, adminCreateGroupFromAdmin, adminUpdateMember, adminDeleteMember, adminDeleteBeacon } from "./callable/admin-groups.js";
 export { adminListUsers, adminUpdateUser, adminDeleteUser } from "./callable/admin-users.js";
 export { onAlertCreated } from "./triggers/on-alert-created.js";

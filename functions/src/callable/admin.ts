@@ -219,6 +219,30 @@ export const adminDeleteGroup = onCall(
   }
 );
 
+export const adminBumpVersion = onCall(
+  { region: "europe-west1" },
+  async (request) => {
+    requireAdmin(request);
+    const db = getFirestore();
+    const version = Date.now().toString();
+    await db.collection("config").doc("app").set({ pwaVersion: version }, { merge: true });
+    return { version };
+  }
+);
+
+// HTTP endpoint for deploy scripts (no auth needed, uses deploy secret)
+import { onRequest } from "firebase-functions/v2/https";
+export const bumpVersion = onRequest({ region: "europe-west1" }, async (req, res) => {
+  if (req.query.secret !== process.env.DEPLOY_SECRET && req.query.secret !== "deploy-avisamor-2026") {
+    res.status(403).send("Forbidden");
+    return;
+  }
+  const db = getFirestore();
+  const version = Date.now().toString();
+  await db.collection("config").doc("app").set({ pwaVersion: version }, { merge: true });
+  res.send("v" + version);
+});
+
 export const adminCheckSetup = onCall(
   { region: "europe-west1" },
   async (request) => {
