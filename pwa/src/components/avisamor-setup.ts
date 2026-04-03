@@ -155,6 +155,7 @@ export class AvisamorSetup extends LitElement {
 
   @state() private _mode: SetupMode = 'choose';
   @state() private _displayName = '';
+  @state() private _groupName = '';
   @state() private _code = '';
   @state() private _loading = false;
   @state() private _error = '';
@@ -179,6 +180,7 @@ export class AvisamorSetup extends LitElement {
       const createGroupFn = httpsCallable(this._functions, 'createGroup');
       const result = await createGroupFn({
         name: this._displayName.trim(),
+        groupName: this._groupName.trim(),
         role: 'alerter',
       });
 
@@ -278,19 +280,19 @@ export class AvisamorSetup extends LitElement {
   private _renderCreate() {
     return html`
       <div class="field">
-        <label for="name-create">Tu nombre</label>
+        <label for="group-name">Nombre del grupo</label>
         <input
-          id="name-create"
+          id="group-name"
           type="text"
-          placeholder="Ej: Abuela Carmen"
-          .value=${this._displayName}
-          @input=${(e: InputEvent) => { this._displayName = (e.target as HTMLInputElement).value; }}
+          placeholder="Ej: Familia García, Residencia Sol"
+          .value=${this._groupName}
+          @input=${(e: InputEvent) => { this._groupName = (e.target as HTMLInputElement).value; }}
         />
       </div>
       <div class="buttons">
         <button
           class="btn-primary"
-          ?disabled=${this._loading}
+          ?disabled=${this._loading || !this._groupName.trim()}
           @click=${this._createGroup}
         >
           ${this._loading ? 'Creando...' : 'Crear grupo'}
@@ -304,16 +306,6 @@ export class AvisamorSetup extends LitElement {
 
   private _renderJoin() {
     return html`
-      <div class="field">
-        <label for="name-join">Tu nombre</label>
-        <input
-          id="name-join"
-          type="text"
-          placeholder="Ej: Abuela Carmen"
-          .value=${this._displayName}
-          @input=${(e: InputEvent) => { this._displayName = (e.target as HTMLInputElement).value; }}
-        />
-      </div>
       <div class="field">
         <label for="code-input">Codigo del grupo</label>
         <input

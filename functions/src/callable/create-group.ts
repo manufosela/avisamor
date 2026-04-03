@@ -32,9 +32,11 @@ export const createGroup = onCall(
       throw new HttpsError("unauthenticated", "Authentication required");
     }
 
-    const { name, role } = request.data as { name?: string; role?: string };
+    const { name, groupName, role } = request.data as { name?: string; groupName?: string; role?: string };
 
     validateDisplayName(name);
+
+    const resolvedGroupName = groupName?.trim() || name;
 
     if (!role || !Object.values(MemberRole).includes(role as MemberRole)) {
       throw new HttpsError("invalid-argument", "Valid role is required (alerter or responder)");
@@ -53,7 +55,7 @@ export const createGroup = onCall(
     const groupData: Omit<Group, "createdAt"> & { createdAt: FirebaseFirestore.FieldValue } = {
       groupId,
       code,
-      name,
+      name: resolvedGroupName,
       createdBy: request.auth.uid,
       createdAt: FieldValue.serverTimestamp(),
       alertExpirySeconds: 60,
