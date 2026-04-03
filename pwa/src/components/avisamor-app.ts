@@ -1,7 +1,7 @@
 import { LitElement, html, css, nothing } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import { auth, functions, googleProvider } from '../lib/firebase.js';
-import { signInWithPopup, signOut, onAuthStateChanged, type User } from 'firebase/auth';
+import { signInWithRedirect, signOut, onAuthStateChanged, type User } from 'firebase/auth';
 import { httpsCallable } from 'firebase/functions';
 import './avisamor-setup.js';
 import './avisamor-alerter.js';
@@ -154,7 +154,7 @@ export class AvisamorApp extends LitElement {
   private async _login(): Promise<void> {
     this._error = '';
     try {
-      await signInWithPopup(auth, googleProvider);
+      await signInWithRedirect(auth, googleProvider);
     } catch (err: unknown) {
       this._error = err instanceof Error ? err.message : 'Error al iniciar sesión';
     }
@@ -240,7 +240,6 @@ export class AvisamorApp extends LitElement {
         <h1>AvisaBlue</h1>
         <p class="subtitle">Alertas para personas dependientes</p>
         <button class="btn-google" @click=${this._login}>
-          <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="" />
           Iniciar sesión con Google
         </button>
         ${this._error ? html`<p class="error">${this._error}</p>` : nothing}
