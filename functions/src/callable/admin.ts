@@ -61,12 +61,18 @@ export const adminListGroups = onCall(
             .get()
         ).data().count;
 
-        const lastAlert = await db
-          .collection("alerts")
-          .where("groupId", "==", groupId)
-          .orderBy("createdAt", "desc")
-          .limit(1)
-          .get();
+        let lastAlertAt = null;
+        try {
+          const lastAlert = await db
+            .collection("alerts")
+            .where("groupId", "==", groupId)
+            .orderBy("createdAt", "desc")
+            .limit(1)
+            .get();
+          lastAlertAt = lastAlert.empty ? null : lastAlert.docs[0].data().createdAt;
+        } catch {
+          // Index may not exist yet, skip
+        }
 
         return {
           groupId,
@@ -77,7 +83,7 @@ export const adminListGroups = onCall(
           createdAt: data.createdAt,
           membersCount,
           beaconsCount,
-          lastAlertAt: lastAlert.empty ? null : lastAlert.docs[0].data().createdAt,
+          lastAlertAt,
         };
       })
     );
