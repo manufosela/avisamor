@@ -10,6 +10,15 @@ android {
     namespace = "com.manufosela.avisamor"
     compileSdk = 34
 
+    signingConfigs {
+        create("release") {
+            storeFile = file("release-keystore.jks")
+            storePassword = System.getenv("KEYSTORE_PASSWORD") ?: ""
+            keyAlias = "avisablue"
+            keyPassword = System.getenv("KEYSTORE_PASSWORD") ?: ""
+        }
+    }
+
     defaultConfig {
         applicationId = "com.manufosela.avisamor"
         minSdk = 26
@@ -23,6 +32,7 @@ android {
     buildTypes {
         release {
             isMinifyEnabled = false
+            signingConfig = signingConfigs.getByName("release")
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"

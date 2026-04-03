@@ -19,6 +19,7 @@ dist/
 android/app/build/
 android/.gradle/
 android/app/google-services.json
+android/app/release-keystore.jks
 
 # IDE
 .idea/
