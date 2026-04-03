@@ -9,6 +9,7 @@ import './avisamor-zone-map.js';
 interface AlertData {
   alertId: string;
   status: string;
+  alerterName: string;
   createdAt: { seconds: number } | null;
   acceptedBy: Array<{ uid: string; displayName: string; zone?: string }>;
   triggeredBy: string;
@@ -231,7 +232,7 @@ export class AvisamorResponder extends LitElement {
       return html`
         <div class="alert-card pulsing">
           <h2>¡ALERTA!</h2>
-          <p>Alguien necesita ayuda</p>
+          <p>${a.alerterName || 'Alguien'} necesita ayuda</p>
           <div class="timer">${this._formatTime(this._elapsed)}</div>
           <button class="btn-accept" ?disabled=${this._accepting} @click=${this._acceptAlert}>
             ${this._accepting ? 'Aceptando...' : '¡VOY YO!'}

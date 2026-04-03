@@ -189,6 +189,13 @@ export class AvisamorAlerter extends LitElement {
         </div>
         <button class="header-btn" @click=${() => this.dispatchEvent(new CustomEvent('logout', { bubbles: true, composed: true }))}>Salir</button>
       </div>
+      <div class="status-area">
+        ${this._errorMsg
+          ? html`<div class="error-message" role="alert">${this._errorMsg}</div>`
+          : ''}
+        <avisamor-alert-status .groupId=${this.groupId}></avisamor-alert-status>
+      </div>
+
       <div class="button-area">
         <button
           class="alert-button ${this._state}"
@@ -198,14 +205,6 @@ export class AvisamorAlerter extends LitElement {
         >
           ${this._getButtonText()}
         </button>
-      </div>
-
-      <div class="status-area">
-        ${this._errorMsg
-          ? html`<div class="error-message" role="alert">${this._errorMsg}</div>`
-          : ''}
-        <avisamor-alert-status .groupId=${this.groupId}></avisamor-alert-status>
-        <avisamor-zone-map .groupId=${this.groupId}></avisamor-zone-map>
       </div>
     `;
   }

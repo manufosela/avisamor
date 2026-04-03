@@ -240,7 +240,6 @@ export class AvisamorSetup extends LitElement {
       <div class="code-display">${this._createdCode}</div>
       <div class="info">
         <p><strong>Comparte este código</strong> con las personas de tu grupo para que se unan.</p>
-        <p>Los <strong>beacons</strong> (localización por zonas) se configuran desde la app Android en Ajustes → Configurar beacons. Es opcional.</p>
       </div>
       <div class="buttons">
         <button class="btn-primary" @click=${() => {
