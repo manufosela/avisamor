@@ -81,6 +81,8 @@ export class AvisamorResponder extends LitElement {
   `;
 
   @property({ type: String }) groupId = '';
+  @property({ type: String }) groupCode = '';
+  @property({ type: String }) groupName = '';
 
   @state() private _alert: AlertData | null = null;
   @state() private _elapsed = 0;
@@ -179,7 +181,8 @@ export class AvisamorResponder extends LitElement {
   render() {
     return html`
       <div class="header">
-        <h1>AvisaBlue — Cuidador</h1>
+        <h1>${this.groupName || 'AvisaBlue'}</h1>
+        <span style="font-size:0.8rem; opacity:0.8">${this.groupCode}</span>
       </div>
       <div class="content">
         ${this._alert ? this._renderAlert() : this._renderWaiting()}

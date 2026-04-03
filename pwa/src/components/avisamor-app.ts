@@ -121,6 +121,8 @@ export class AvisamorApp extends LitElement {
   @state() private _groups: GroupInfo[] = [];
   @state() private _activeGroupId = '';
   @state() private _activeRole = '';
+  @state() private _activeGroupCode = '';
+  @state() private _activeGroupName = '';
   @state() private _setupMode = '';
   @state() private _error = '';
 
@@ -174,6 +176,8 @@ export class AvisamorApp extends LitElement {
   private _enterGroup(group: GroupInfo): void {
     this._activeGroupId = group.groupId;
     this._activeRole = group.role;
+    this._activeGroupCode = group.code;
+    this._activeGroupName = group.groupName;
     this._appState = 'alerter';
   }
 
@@ -206,7 +210,7 @@ export class AvisamorApp extends LitElement {
         <avisamor-alerter .groupId=${this._activeGroupId}></avisamor-alerter>
       ` : nothing}
       ${this._appState === 'alerter' && this._activeRole === 'responder' ? html`
-        <avisamor-responder .groupId=${this._activeGroupId}></avisamor-responder>
+        <avisamor-responder .groupId=${this._activeGroupId} .groupCode=${this._activeGroupCode} .groupName=${this._activeGroupName}></avisamor-responder>
       ` : nothing}
     `;
   }
