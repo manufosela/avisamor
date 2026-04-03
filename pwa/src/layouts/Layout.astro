@@ -15,9 +15,16 @@ const { title = 'Avisamor' } = Astro.props;
   </head>
   <body>
     <slot />
-    <script>
+    <script is:inline>
       if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('/sw.js');
+        navigator.serviceWorker.getRegistrations().then(function(regs) {
+          regs.forEach(function(r) { r.unregister(); });
+        });
+      }
+      if ('caches' in window) {
+        caches.keys().then(function(keys) {
+          keys.forEach(function(k) { caches.delete(k); });
+        });
       }
     </script>
   </body>
