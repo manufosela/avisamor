@@ -17,6 +17,15 @@ export class AvisamorAlerter extends LitElement {
       font-family: system-ui, -apple-system, sans-serif;
     }
 
+    .alerter-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 10px 16px; background: #dc2626; color: #fff; font-size: 0.9rem;
+    }
+    .header-btn {
+      background: rgba(255,255,255,0.2); color: #fff; border: none;
+      padding: 6px 10px; border-radius: 6px; cursor: pointer; font-size: 0.8rem;
+    }
+
     .button-area {
       flex: 1;
       display: flex;
@@ -115,6 +124,8 @@ export class AvisamorAlerter extends LitElement {
   `;
 
   @property({ type: String }) groupId = '';
+  @property({ type: String }) groupName = '';
+  @property({ type: String }) groupCode = '';
 
   @state() private _state: AlerterState = 'idle';
   @state() private _errorMsg = '';
@@ -171,6 +182,13 @@ export class AvisamorAlerter extends LitElement {
 
   render() {
     return html`
+      <div class="alerter-header">
+        <div>
+          <strong>${this.groupName || 'AvisaBlue'}</strong>
+          <span style="font-size:0.75rem; opacity:0.7; margin-left:8px;">${this.groupCode}</span>
+        </div>
+        <button class="header-btn" @click=${() => this.dispatchEvent(new CustomEvent('logout', { bubbles: true, composed: true }))}>Salir</button>
+      </div>
       <div class="button-area">
         <button
           class="alert-button ${this._state}"

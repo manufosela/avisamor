@@ -225,21 +225,11 @@ export class AvisamorApp extends LitElement {
       ${this._appState === 'setup' ? html`
         <avisamor-setup .initialMode=${this._setupMode} @group-joined=${this._onGroupJoined} @back=${() => this._loadGroups()}></avisamor-setup>
       ` : nothing}
-      ${this._appState === 'alerter' ? html`
-        <div class="app-bar">
-          <span class="app-bar-title">${this._activeGroupName}</span>
-          <span class="app-bar-code">${this._activeGroupCode}</span>
-          <div class="app-bar-actions">
-            ${this._groups.length > 1 ? html`<button class="app-bar-btn" @click=${() => this._nav()}>Mis grupos</button>` : nothing}
-            <button class="app-bar-btn" @click=${this._logout}>Salir</button>
-          </div>
-        </div>
-      ` : nothing}
       ${this._appState === 'alerter' && this._activeRole === 'alerter' ? html`
-        <avisamor-alerter .groupId=${this._activeGroupId}></avisamor-alerter>
+        <avisamor-alerter .groupId=${this._activeGroupId} .groupName=${this._activeGroupName} .groupCode=${this._activeGroupCode} @logout=${this._logout} @switch-group=${() => this._nav()}></avisamor-alerter>
       ` : nothing}
       ${this._appState === 'alerter' && this._activeRole === 'responder' ? html`
-        <avisamor-responder .groupId=${this._activeGroupId} .groupCode=${this._activeGroupCode} .groupName=${this._activeGroupName}></avisamor-responder>
+        <avisamor-responder .groupId=${this._activeGroupId} .groupCode=${this._activeGroupCode} .groupName=${this._activeGroupName} @logout=${this._logout} @switch-group=${() => this._nav()}></avisamor-responder>
       ` : nothing}
     `;
   }

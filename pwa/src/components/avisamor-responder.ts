@@ -29,9 +29,10 @@ export class AvisamorResponder extends LitElement {
       padding: 16px 24px; background: #16a34a; color: #fff;
     }
     .header h1 { margin: 0; font-size: 1.2rem; }
+    .header-actions { display: flex; gap: 6px; }
     .header button {
       background: rgba(255,255,255,0.2); color: #fff; border: none;
-      padding: 8px 12px; border-radius: 6px; cursor: pointer; font-size: 0.85rem;
+      padding: 6px 10px; border-radius: 6px; cursor: pointer; font-size: 0.8rem;
     }
 
     .content { flex: 1; padding: 24px; }
@@ -197,8 +198,13 @@ export class AvisamorResponder extends LitElement {
   render() {
     return html`
       <div class="header">
-        <h1>${this.groupName || 'AvisaBlue'}</h1>
-        <span style="font-size:0.8rem; opacity:0.8">${this.groupCode}</span>
+        <div>
+          <h1>${this.groupName || 'AvisaBlue'}</h1>
+          <span style="font-size:0.75rem; opacity:0.7">${this.groupCode}</span>
+        </div>
+        <div class="header-actions">
+          <button @click=${() => this.dispatchEvent(new CustomEvent('logout', { bubbles: true, composed: true }))}>Salir</button>
+        </div>
       </div>
       <div class="content">
         ${this._alert ? this._renderAlert() : this._renderWaiting()}
