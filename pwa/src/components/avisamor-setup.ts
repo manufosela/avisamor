@@ -256,22 +256,12 @@ export class AvisamorSetup extends LitElement {
 
   private _renderChoose() {
     return html`
-      <div class="field">
-        <label for="name-input">Tu nombre</label>
-        <input
-          id="name-input"
-          type="text"
-          placeholder="Ej: Abuela Carmen"
-          .value=${this._displayName}
-          @input=${(e: InputEvent) => { this._displayName = (e.target as HTMLInputElement).value; }}
-        />
-      </div>
       <div class="buttons">
         <button class="btn-primary" @click=${() => this._setMode('create')}>
           Crear grupo nuevo
         </button>
         <button class="btn-secondary" @click=${() => this._setMode('join')}>
-          Unirse con codigo
+          Unirse a un grupo
         </button>
       </div>
     `;
@@ -289,10 +279,20 @@ export class AvisamorSetup extends LitElement {
           @input=${(e: InputEvent) => { this._groupName = (e.target as HTMLInputElement).value; }}
         />
       </div>
+      <div class="field">
+        <label for="name-create">Tu nombre</label>
+        <input
+          id="name-create"
+          type="text"
+          placeholder="Ej: Abuela Carmen"
+          .value=${this._displayName}
+          @input=${(e: InputEvent) => { this._displayName = (e.target as HTMLInputElement).value; }}
+        />
+      </div>
       <div class="buttons">
         <button
           class="btn-primary"
-          ?disabled=${this._loading || !this._groupName.trim()}
+          ?disabled=${this._loading || !this._groupName.trim() || !this._displayName.trim()}
           @click=${this._createGroup}
         >
           ${this._loading ? 'Creando...' : 'Crear grupo'}
@@ -307,7 +307,17 @@ export class AvisamorSetup extends LitElement {
   private _renderJoin() {
     return html`
       <div class="field">
-        <label for="code-input">Codigo del grupo</label>
+        <label for="name-join">Tu nombre</label>
+        <input
+          id="name-join"
+          type="text"
+          placeholder="Ej: María, Carlos"
+          .value=${this._displayName}
+          @input=${(e: InputEvent) => { this._displayName = (e.target as HTMLInputElement).value; }}
+        />
+      </div>
+      <div class="field">
+        <label for="code-input">Código del grupo</label>
         <input
           id="code-input"
           class="code-input"
@@ -322,7 +332,7 @@ export class AvisamorSetup extends LitElement {
       <div class="buttons">
         <button
           class="btn-primary"
-          ?disabled=${this._loading}
+          ?disabled=${this._loading || !this._displayName.trim() || this._code.length !== 6}
           @click=${this._joinGroup}
         >
           ${this._loading ? 'Uniendo...' : 'Unirse al grupo'}
