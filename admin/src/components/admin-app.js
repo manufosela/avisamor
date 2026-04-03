@@ -1,6 +1,6 @@
 import { LitElement, html, css, nothing } from 'lit';
-import { auth, functions } from '../lib/firebase.js';
-import { signInWithEmailAndPassword, onAuthStateChanged, signOut } from 'firebase/auth';
+import { auth, functions, googleProvider } from '../lib/firebase.js';
+import { signInWithPopup, onAuthStateChanged, signOut } from 'firebase/auth';
 import { httpsCallable } from 'firebase/functions';
 
 export class AdminApp extends LitElement {
@@ -157,7 +157,7 @@ export class AdminApp extends LitElement {
     this._error = '';
     this._loading = true;
     try {
-      await signInWithEmailAndPassword(auth, this._email, this._password);
+      await signInWithPopup(auth, googleProvider);
     } catch (e) {
       this._error = `Error de login: ${e.message}`;
     }
@@ -276,11 +276,12 @@ export class AdminApp extends LitElement {
   _renderLogin() {
     return html`
       <div class="login-form">
-        <h2>Avisamor Admin</h2>
+        <h2>AvisaBlue Admin</h2>
         ${this._error ? html`<p class="error">${this._error}</p>` : nothing}
-        <input type="email" placeholder="Email" .value=${this._email} @input=${(e) => this._email = e.target.value} />
-        <input type="password" placeholder="Contraseña" .value=${this._password} @input=${(e) => this._password = e.target.value} @keyup=${(e) => e.key === 'Enter' && this._login()} />
-        <button @click=${this._login} ?disabled=${this._loading}>${this._loading ? 'Entrando...' : 'Entrar'}</button>
+        <button @click=${this._login} ?disabled=${this._loading} style="display:flex;align-items:center;gap:12px;justify-content:center;">
+          <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="" style="width:24px;height:24px;" />
+          ${this._loading ? 'Entrando...' : 'Iniciar sesión con Google'}
+        </button>
       </div>
     `;
   }
