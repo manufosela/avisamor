@@ -3,7 +3,7 @@ import { customElement, state } from 'lit/decorators.js';
 import { app } from '../lib/firebase.js';
 import { getFunctions, httpsCallable } from 'firebase/functions';
 
-type SetupMode = 'choose' | 'create' | 'join';
+type SetupMode = 'choose' | 'create' | 'create-role' | 'join' | 'join-role' | 'show-code';
 
 @customElement('avisamor-setup')
 export class AvisamorSetup extends LitElement {
@@ -156,7 +156,10 @@ export class AvisamorSetup extends LitElement {
   @state() private _mode: SetupMode = 'choose';
   @state() private _displayName = '';
   @state() private _groupName = '';
+  @state() private _role = '';
   @state() private _code = '';
+  @state() private _groupCode = '';
+  @state() private _groupId = '';
   @state() private _loading = false;
   @state() private _error = '';
 
@@ -181,15 +184,13 @@ export class AvisamorSetup extends LitElement {
       const result = await createGroupFn({
         name: this._displayName.trim(),
         groupName: this._groupName.trim(),
-        role: 'alerter',
+        role: this._role,
       });
 
       const data = result.data as { groupId: string; code: string };
-      this.dispatchEvent(new CustomEvent('group-joined', {
-        detail: { groupId: data.groupId, code: data.code },
-        bubbles: true,
-        composed: true,
-      }));
+      this._groupCode = data.code;
+      this._groupId = data.groupId;
+      this._mode = 'show-code' as SetupMode;
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Error al crear grupo';
       this._error = message;
@@ -216,7 +217,7 @@ export class AvisamorSetup extends LitElement {
       const result = await joinGroupFn({
         code: this._code,
         displayName: this._displayName.trim(),
-        role: 'alerter',
+        role: this._role,
       });
 
       const data = result.data as { groupId: string; groupName: string };
@@ -247,7 +248,10 @@ export class AvisamorSetup extends LitElement {
 
         ${this._mode === 'choose' ? this._renderChoose() : ''}
         ${this._mode === 'create' ? this._renderCreate() : ''}
+        ${this._mode === 'create-role' ? this._renderRole('create') : ''}
         ${this._mode === 'join' ? this._renderJoin() : ''}
+        ${this._mode === 'join-role' ? this._renderRole('join') : ''}
+        ${this._mode === 'show-code' ? this._renderShowCode() : ''}
 
         ${this._error ? html`<div class="error" role="alert">${this._error}</div>` : ''}
       </div>
@@ -292,12 +296,12 @@ export class AvisamorSetup extends LitElement {
       <div class="buttons">
         <button
           class="btn-primary"
-          ?disabled=${this._loading || !this._groupName.trim() || !this._displayName.trim()}
-          @click=${this._createGroup}
+          ?disabled=${!this._groupName.trim() || !this._displayName.trim()}
+          @click=${() => this._setMode('create-role')}
         >
-          ${this._loading ? 'Creando...' : 'Crear grupo'}
+          Siguiente
         </button>
-        <button class="btn-back" @click=${() => this._setMode('choose')} ?disabled=${this._loading}>
+        <button class="btn-back" @click=${() => this._setMode('choose')}>
           Volver
         </button>
       </div>
@@ -332,14 +336,60 @@ export class AvisamorSetup extends LitElement {
       <div class="buttons">
         <button
           class="btn-primary"
-          ?disabled=${this._loading || !this._displayName.trim() || this._code.length !== 6}
-          @click=${this._joinGroup}
+          ?disabled=${!this._displayName.trim() || this._code.length !== 6}
+          @click=${() => this._setMode('join-role')}
         >
-          ${this._loading ? 'Uniendo...' : 'Unirse al grupo'}
+          Siguiente
         </button>
-        <button class="btn-back" @click=${() => this._setMode('choose')} ?disabled=${this._loading}>
+        <button class="btn-back" @click=${() => this._setMode('choose')}>
           Volver
         </button>
+      </div>
+    `;
+  }
+  private _renderRole(flow: 'create' | 'join') {
+    const action = flow === 'create' ? () => this._createGroup() : () => this._joinGroup();
+    const backMode = flow === 'create' ? 'create' : 'join';
+    return html`
+      <p style="font-size:1.1rem; font-weight:600; margin-bottom:24px;">¿Cuál es tu rol?</p>
+      <div class="buttons">
+        <button
+          class="btn-primary"
+          ?disabled=${this._loading}
+          @click=${() => { this._role = 'alerter'; action(); }}
+        >
+          ${this._loading ? 'Procesando...' : 'Pido ayuda (persona dependiente)'}
+        </button>
+        <button
+          class="btn-secondary"
+          ?disabled=${this._loading}
+          @click=${() => { this._role = 'responder'; action(); }}
+        >
+          ${this._loading ? 'Procesando...' : 'Doy ayuda (cuidador)'}
+        </button>
+        <button class="btn-back" @click=${() => this._setMode(backMode as SetupMode)} ?disabled=${this._loading}>
+          Volver
+        </button>
+      </div>
+    `;
+  }
+
+  private _renderShowCode() {
+    return html`
+      <p style="font-size:1.1rem; font-weight:600;">Grupo creado</p>
+      <p>Comparte este código con los cuidadores para que se unan:</p>
+      <div style="font-size:2.5rem; font-weight:800; letter-spacing:0.3em; text-align:center; padding:24px; background:#f3f4f6; border-radius:12px; margin:16px 0;">
+        ${this._groupCode}
+      </div>
+      <p style="font-size:0.9rem; color:#6b7280;">Apunta este código. Los cuidadores lo necesitan para unirse al grupo.</p>
+      <div class="buttons">
+        <button class="btn-primary" @click=${() => {
+          this.dispatchEvent(new CustomEvent('group-joined', {
+            detail: { groupId: this._groupId, code: this._groupCode, role: this._role },
+            bubbles: true,
+            composed: true,
+          }));
+        }}>Continuar</button>
       </div>
     `;
   }
